@@ -178,6 +178,7 @@ class MOX(Sensor):
             #---------------------------------------------------------------------
             # RS/R0 = A*conc^B (a line in the loglog scale)
             # TODO implement multiple gases?
+            # TODO implement noise?
 
             resistance_variation = 0.0
 
@@ -197,7 +198,7 @@ class MOX(Sensor):
             # Calculate RS_R0 given the resistance variation
             RS_R0 = sensitivity_air[self._sensor_model] - resistance_variation
 
-            #Ensure a minimum sensor resitance
+            # Ensure a minimum sensor resitance
             if (RS_R0 <= 0.0):
                 RS_R0 = 0.01
 

@@ -41,3 +41,6 @@ _build
 build/
 install/
 log/
+
+# Results
+/examples/results/ecoli*
