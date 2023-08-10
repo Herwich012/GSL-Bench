@@ -3,3 +3,4 @@
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
 from .stop_conditions import StopCondition
+from .ecoli import EcoliGSL

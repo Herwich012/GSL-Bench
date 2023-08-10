@@ -16,6 +16,7 @@ import carb
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
+from pegasus.simulator.logic.gsl.ecoli import EcoliGSL
 
 # Auxiliary scipy
 from scipy.spatial.transform import Rotation
@@ -75,12 +76,12 @@ class NonlinearController(Backend):
         self.waypoints = np.array([[[1.5,1.5,0.2], # px, py, pz
                                     [0.0,0.0,0.0],  # vx, vy, vz
                                     [0.0,0.0,0.0]], # ax, ay, az
-                                   [[8.0,8.0,2.0],
+                                   [[8.0,5.0,2.0],
                                     [0.0,0.0,0.0],
-                                    [0.0,0.0,0.0]],
-                                   [[7.0,3.0,3.0],
-                                    [0.0,0.0,0.0],
-                                    [0.0,0.0,0.0]]])#
+                                    [0.0,0.0,0.0]]])#,
+                                #    [[7.0,3.0,3.0],
+                                #     [0.0,0.0,0.0],
+                                #     [0.0,0.0,0.0]]])#
                                 #    [[7.5,9.0,3.0],
                                 #     [0.0,0.0,0.0],
                                 #     [0.0,0.0,0.0]],
@@ -105,20 +106,25 @@ class NonlinearController(Backend):
         self.gas_conc = 0.0
         self.RS_R0 = 0.0
 
+        # GSL algorithm
+        self.gsl = EcoliGSL(surge_distance= 0.5,
+                            env_bounds=env_size,
+                            env_bound_sep=0.5)
+
         # GSL algorithm logic (ecoli)
-        self.start_wp = np.zeros((3,3))
-        self.end_wp = np.zeros((3,3))
-        self.surge_dist = 0.5 # [m]
-        self.sensor_reading = 0.0
-        self.sensor_reading_prev = 0.0
-        self.surge_heading_prev = 0.0 # [rad]
-        self.env_bounds_sep = 0.5 # [m] min distance from environment bounds
-        self.env_bounds = [[env_size[0][0] + self.env_bounds_sep + self.surge_dist, # min X
-                            env_size[0][1] + self.env_bounds_sep + self.surge_dist, # min Y
-                            env_size[0][2] + self.env_bounds_sep + self.surge_dist], # min Z
-                           [env_size[1][0] - self.env_bounds_sep - self.surge_dist, # max X
-                            env_size[1][1] - self.env_bounds_sep - self.surge_dist, # max Y
-                            env_size[1][2] - self.env_bounds_sep - self.surge_dist]] # max Z
+        # self.start_wp = np.zeros((3,3))
+        # self.end_wp = np.zeros((3,3))
+        # self.surge_dist = 0.5 # [m]
+        # self.sensor_reading = 0.0
+        # self.sensor_reading_prev = 0.0
+        # self.surge_heading_prev = 0.0 # [rad]
+        # self.env_bounds_sep = 0.5 # [m] min distance from environment bounds
+        # self.env_bounds = [[env_size[0][0] + self.env_bounds_sep + self.surge_dist, # min X
+        #                     env_size[0][1] + self.env_bounds_sep + self.surge_dist, # min Y
+        #                     env_size[0][2] + self.env_bounds_sep + self.surge_dist], # min Z
+        #                    [env_size[1][0] - self.env_bounds_sep - self.surge_dist, # max X
+        #                     env_size[1][1] - self.env_bounds_sep - self.surge_dist, # max Y
+        #                     env_size[1][2] - self.env_bounds_sep - self.surge_dist]] # max Z
 
         # Auxiliar variable, so that we only start sending motor commands once we get the state of the vehicle
         self.received_first_state = False
@@ -146,8 +152,6 @@ class NonlinearController(Backend):
         """
         Stopping the controller. Saving the statistics data for plotting later
         """
-        self.reset_waypoints()
-        self.reset_gsl_ecoli()
 
         # Check if we should save the statistics to some file or not
         if self.results_files is None:
@@ -155,17 +159,19 @@ class NonlinearController(Backend):
         
         statistics = {}
         statistics["time"] = np.array(self.time_vector)
-        statistics["p"] = np.vstack(self.position_over_time)
-        statistics["desired_p"] = np.vstack(self.desired_position_over_time)
-        statistics["ep"] = np.vstack(self.position_error_over_time)
-        statistics["ev"] = np.vstack(self.velocity_error_over_time)
-        statistics["er"] = np.vstack(self.atittude_error_over_time)
-        statistics["ew"] = np.vstack(self.attitude_rate_error_over_time)
-        np.savez(self.results_files, **statistics)
-        carb.log_warn("Statistics saved to: " + self.results_files)
+        if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
+            statistics["p"] = np.vstack(self.position_over_time)
+            statistics["desired_p"] = np.vstack(self.desired_position_over_time)
+            statistics["ep"] = np.vstack(self.position_error_over_time)
+            statistics["ev"] = np.vstack(self.velocity_error_over_time)
+            statistics["er"] = np.vstack(self.atittude_error_over_time)
+            statistics["ew"] = np.vstack(self.attitude_rate_error_over_time)
+            np.savez(self.results_files, **statistics)
+            carb.log_warn("Statistics saved to: " + self.results_files)
 
         self.reset_statistics()
-
+        self.reset_waypoints()
+        self.gsl.reset()
 
     def update_sensor(self, sensor_type: str, data):
         """
@@ -243,13 +249,14 @@ class NonlinearController(Backend):
                 self.end_wp = self.waypoints[self.waypoint_idx + 1]
             else:
                 self.start_wp = self.end_wp
-                self.end_wp, self.surge_heading_prev = self.gsl_ecoli_wp(
-                    self.start_wp, 
-                    self.sensor_reading, 
-                    self.sensor_reading_prev, 
-                    self.surge_heading_prev, 
-                    self.surge_dist
-                )
+                # self.end_wp, self.surge_heading_prev = self.gsl_ecoli_wp(
+                #     self.start_wp, 
+                #     self.sensor_reading, 
+                #     self.sensor_reading_prev, 
+                #     self.surge_heading_prev, 
+                #     self.surge_dist
+                # )
+                self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp, self.avg_vel)
 
@@ -375,6 +382,8 @@ class NonlinearController(Backend):
 
 
     def reset_waypoints(self):
+        self.start_wp = np.zeros((3,3))
+        self.end_wp = np.zeros((3,3))
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
         self.waypoint_idx = 0
@@ -394,69 +403,68 @@ class NonlinearController(Backend):
     # GSL method (Gas Source Localisation)
     # ---------------------------------------------------
 
-    def gsl_ecoli_wp(self, start:np.ndarray, sensor_now:float, sensor_prev:float, surge_heading_prev:float, surge_distance:float):
-        """
-        Method that generates a new waypoint according to the 'ecoli' algorithm
+    # def gsl_ecoli_wp(self, start:np.ndarray, sensor_now:float, sensor_prev:float, surge_heading_prev:float, surge_distance:float):
+    #     """
+    #     Method that generates a new waypoint according to the 'ecoli' algorithm
         
-        Args:
-            start (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
-            sensor_now (float): current sensor reading [ohms]
-            sensor_prev (float): previous sensor reading [ohms]
-            surge_vector_prev (float): previous surge vector [rad]
-            surge_distance (float): surge distance [m]
-        Returns:
-            np.ndarray: A 3x3 numpy matrix with the next waypoint
-        """ 
-        surge = False
+    #     Args:
+    #         start (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
+    #         sensor_now (float): current sensor reading [ohms]
+    #         sensor_prev (float): previous sensor reading [ohms]
+    #         surge_vector_prev (float): previous surge vector [rad]
+    #         surge_distance (float): surge distance [m]
+    #     Returns:
+    #         np.ndarray: A 3x3 numpy matrix with the next waypoint
+    #     """ 
+    #     surge = False
 
-        while True:
-            if sensor_now >= sensor_prev: # if reading is the same/gets worse, move randomly
-                surge_heading =  2*np.pi*np.random.rand()
-                carb.log_info(f"Ecoli: {'{:5.0f}'.format(sensor_now)} >= {'{:5.0f}'.format(sensor_prev)}, RANDOM  heading: {'{:1.2f}'.format(surge_heading)}")
-            else:
-                surge = True
-                surge_heading = surge_heading_prev
-                print(f"Ecoli: {'{:5.0f}'.format(sensor_now)} < {'{:5.0f}'.format(sensor_prev)}, SURGE!!! heading: {'{:1.2f}'.format(surge_heading)}")
+    #     while True:
+    #         if sensor_now >= sensor_prev: # if reading is the same/gets worse, move randomly
+    #             surge_heading =  2*np.pi*np.random.rand()
+    #             carb.log_info(f"Ecoli: {'{:5.0f}'.format(sensor_now)} >= {'{:5.0f}'.format(sensor_prev)}, RANDOM  heading: {'{:1.2f}'.format(surge_heading)}")
+    #         else:
+    #             surge = True
+    #             surge_heading = surge_heading_prev
+    #             print(f"Ecoli: {'{:5.0f}'.format(sensor_now)} < {'{:5.0f}'.format(sensor_prev)}, SURGE!!! heading: {'{:1.2f}'.format(surge_heading)}")
 
-            movement = np.array([[surge_distance*np.cos(surge_heading), surge_distance*np.sin(surge_heading), 0.0],
-                                [0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0]])
+    #         movement = np.array([[surge_distance*np.cos(surge_heading), surge_distance*np.sin(surge_heading), 0.0],
+    #                             [0.0, 0.0, 0.0],
+    #                             [0.0, 0.0, 0.0]])
             
-            wp = start + movement
+    #         wp = start + movement
             
-            if self.check_in_env(wp): 
-                break
-            elif surge == True:
-                print(f"Encountered obstacle! Randomizing previous surge heading...")
-                surge_heading_prev = 2*np.pi*np.random.rand() # update previous surge heading if it would move into an obstacle
-            else:
-                print(f"Encountered obstacle! Randomizing heading again...")
-                surge_heading = 2*np.pi*np.random.rand()
+    #         if self.check_in_env(wp): 
+    #             break
+    #         elif surge == True:
+    #             print(f"Encountered obstacle! Randomizing previous surge heading...")
+    #             surge_heading_prev = 2*np.pi*np.random.rand() # update previous surge heading if it would move into an obstacle
+    #         else:
+    #             print(f"Encountered obstacle! Randomizing heading again...")
+    #             surge_heading = 2*np.pi*np.random.rand()
 
-        return wp, surge_heading
+    #     return wp, surge_heading
     
 
-    def reset_gsl_ecoli(self):
-        self.start_wp = np.zeros((3,3))
-        self.end_wp = np.zeros((3,3))
-        self.sensor_reading = 0.0
-        self.sensor_reading_prev = 0.0
-        self.surge_heading_prev = 0.0 # [rad]
-        self.valid_wp = False
+    # def reset_gsl_ecoli(self):
+    #     self.start_wp = np.zeros((3,3))
+    #     self.end_wp = np.zeros((3,3))
+    #     self.sensor_reading = 0.0
+    #     self.sensor_reading_prev = 0.0
+    #     self.surge_heading_prev = 0.0 # [rad]
 
 
-    def check_in_env(self, wp:np.ndarray):
-        """
-        Method that returns True if waypoint is within the environment
+    # def check_in_env(self, wp:np.ndarray):
+    #     """
+    #     Method that returns True if waypoint is within the environment
         
-        Args:
-            wp (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
-            env (list): a [2,3] size list with the environment min and max bounds
-        Returns:
-            bool: True if waypoint is in environment
-        """
-        env = self.env_bounds
-        if wp[0,0] < env[0][0] or wp[0,1] < env[0][1] or wp[0,2] < env[0][2] or wp[0,0] > env[1][0] or wp[0,1] > env[1][1] or wp[1,2] > env[1][2]:
-            return False
-        else:
-            return True
+    #     Args:
+    #         wp (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
+    #         env (list): a [2,3] size list with the environment min and max bounds
+    #     Returns:
+    #         bool: True if waypoint is in environment
+    #     """
+    #     env = self.env_bounds
+    #     if wp[0,0] < env[0][0] or wp[0,1] < env[0][1] or wp[0,2] < env[0][2] or wp[0,0] > env[1][0] or wp[0,1] > env[1][1] or wp[0,2] > env[1][2]:
+    #         return False
+    #     else:
+    #         return True

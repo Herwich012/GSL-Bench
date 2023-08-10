@@ -96,7 +96,10 @@ class PegasusApp:
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=10.0, source_pos=np.array([5.0, 0.6, 2.0]), distance2src=3.0)
+        self.stop_cond = StopCondition(time=10.0,
+                                       source_pos=np.array([5.0, 0.6, 2.0]), 
+                                       distance2src=2.0)
+
 
     def run(self):
         """
@@ -116,8 +119,9 @@ class PegasusApp:
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
 
-            # Stop the simulation
+            # Stop & Reset the simulation
             self.timeline.stop()
+            self.world.reset() # necessary to replicate 'UI stop button behaviour'
             carb.log_warn(f"Finished run {i+1}/{len(self.statistics)}")
         
         # Cleanup and quit
