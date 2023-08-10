@@ -1,5 +1,6 @@
 """
 | File: mox_utils.py
+| Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | Description: Provides utilities for different types of simulated metal oxide gas sensors
 | Based on the implementation provided by GADEN (https://github.com/MAPIRlab/gaden)
 """

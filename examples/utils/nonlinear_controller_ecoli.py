@@ -32,10 +32,7 @@ class NonlinearController(Backend):
     pp. 2520-2525, doi: 10.1109/ICRA.2011.5980409.
     """
 
-    def __init__(self, 
-        # trajectory_file: str = None, 
-        # results_file: str=None, 
-        # reverse=False,
+    def __init__(self,
         env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
                   [np.inf,np.inf,np.inf]], # env max x y z
         Kp=[10.0, 10.0, 10.0],
@@ -122,12 +119,6 @@ class NonlinearController(Backend):
                            [env_size[1][0] - self.env_bounds_sep - self.surge_dist, # max X
                             env_size[1][1] - self.env_bounds_sep - self.surge_dist, # max Y
                             env_size[1][2] - self.env_bounds_sep - self.surge_dist]] # max Z
-        self.src_p = np.array([5.0, 0.6, 2.0])
-        self.stop_bool = False
-        # TODO move definition of stop condition parameters to main script
-        self.stop_time = 10.0 # [s] max time to locate the source
-        self.stop_dist = 3.0 # [m] max distance to the source to invoke the stop condition
-        
 
         # Auxiliar variable, so that we only start sending motor commands once we get the state of the vehicle
         self.received_first_state = False
@@ -157,7 +148,6 @@ class NonlinearController(Backend):
         """
         self.reset_waypoints()
         self.reset_gsl_ecoli()
-        self.stop_bool = False
 
         # Check if we should save the statistics to some file or not
         if self.results_files is None:
@@ -361,12 +351,6 @@ class NonlinearController(Backend):
         self.velocity_error_over_time.append(ev)
         self.atittude_error_over_time.append(e_R)
         self.attitude_rate_error_over_time.append(e_w)
-        
-        # ----------------------------
-        # Evalute stop condition
-        # ----------------------------
-        if self.get_stop_cond():
-            self.stop_bool = True
 
 
     @staticmethod
@@ -476,26 +460,3 @@ class NonlinearController(Backend):
             return False
         else:
             return True
-
-    # TODO move stop conditions out of controller
-    def stop_distance_cond(self) -> bool:
-        stop = False
-        # if the distance between robot and source is smaller than the stop distance
-        if np.linalg.norm((self.p - self.src_p)) < self.stop_dist:
-            stop = True
-            print(f"Within stop distance ({round(self.stop_dist,2)}m), stopping simulation...")
-
-        return stop
-    
-
-    def stop_time_cond(self) -> bool:
-        stop = False
-        # if the distance between robot and source is smaller than the stop distance
-        if self.total_time > self.stop_time:
-            stop = True
-            print(f"Exceeded stop time ({round(self.stop_time,2)}s), stopping simulation...")
-
-        return stop
-    
-    def get_stop_cond(self) -> bool:
-        return self.stop_time_cond() or self.stop_distance_cond()

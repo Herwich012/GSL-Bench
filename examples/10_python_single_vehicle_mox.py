@@ -30,6 +30,7 @@ from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
 from examples.utils.nonlinear_controller_ecoli import NonlinearController
+from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
 from scipy.spatial.transform import Rotation
@@ -48,7 +49,7 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-        # TODO init settings from yaml file?
+        # TODO init settings from yaml file
         # Acquire the timeline that will be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
@@ -59,9 +60,6 @@ class PegasusApp:
         # spawning asset primitives, etc.
         self.pg._world = World(**self.pg._world_settings)
         self.world = self.pg.world
-
-        # Launch one of the worlds provided by NVIDIA
-        # self.pg.load_environment(SIMULATION_ENVIRONMENTS["Curved Gridroom"])
 
         # Launch one of the worlds provided AutoGDM2
         self.pg.load_environment('/home/hajo/AutoGDM2/environments/isaac_sim/wh_empty_0000.usd')
@@ -96,9 +94,9 @@ class PegasusApp:
         # Auxiliar variable for repeated runs
         self.runs = 3
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
-        self.stop_sim = False
-        self.quit_sim = False
 
+        # Set stop condition(s)
+        self.stop_cond = StopCondition(time=10.0, source_pos=np.array([5.0, 0.6, 2.0]), distance2src=3.0)
 
     def run(self):
         """
@@ -113,7 +111,8 @@ class PegasusApp:
             # Start the simulation
             self.timeline.play()
         
-            while not self.controller.stop_bool:
+            while not self.stop_cond.get(time_current = self.controller.total_time,
+                                         pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
 
@@ -121,9 +120,8 @@ class PegasusApp:
             self.timeline.stop()
             carb.log_warn(f"Finished run {i+1}/{len(self.statistics)}")
         
-        # Cleanup and stop
+        # Cleanup and quit
         carb.log_warn("PegasusApp Simulation App is closing.")
-        # self.timeline.stop()
         simulation_app.close()
 
 

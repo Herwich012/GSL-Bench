@@ -1,6 +1,6 @@
 """
 | File: mox.py
-| Author: Hajo Erwich
+| Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: Simulates a Metal-oxide gas sensor. Based on the implementation provided by GADEN (https://github.com/MAPIRlab/gaden)
 """
