@@ -33,9 +33,9 @@ class NonlinearController(Backend):
     """
 
     def __init__(self, 
-        trajectory_file: str = None, 
-        results_file: str=None, 
-        reverse=False,
+        # trajectory_file: str = None, 
+        # results_file: str=None, 
+        # reverse=False,
         env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
                   [np.inf,np.inf,np.inf]], # env max x y z
         Kp=[10.0, 10.0, 10.0],
@@ -124,6 +124,7 @@ class NonlinearController(Backend):
                             env_size[1][2] - self.env_bounds_sep - self.surge_dist]] # max Z
         self.src_p = np.array([5.0, 0.6, 2.0])
         self.stop_bool = False
+        # TODO move definition of stop condition parameters to main script
         self.stop_time = 10.0 # [s] max time to locate the source
         self.stop_dist = 3.0 # [m] max distance to the source to invoke the stop condition
         
@@ -131,8 +132,9 @@ class NonlinearController(Backend):
         # Auxiliar variable, so that we only start sending motor commands once we get the state of the vehicle
         self.received_first_state = False
 
-        # Lists used for analysing performance s][atistics
-        self.results_files = results_file
+        # TODO add success rate, gas conc and mox reading
+        # Lists used for analysing performance statistics
+        self.results_files = None
         self.time_vector = []
         self.desired_position_over_time = []
         self.position_over_time = []
@@ -155,6 +157,7 @@ class NonlinearController(Backend):
         """
         self.reset_waypoints()
         self.reset_gsl_ecoli()
+        self.stop_bool = False
 
         # Check if we should save the statistics to some file or not
         if self.results_files is None:
@@ -402,7 +405,7 @@ class NonlinearController(Backend):
         self.max_index = 0
         self.total_time = 0.0
 
-
+    # TODO move GSL method out of controller
     # ---------------------------------------------------
     # GSL method (Gas Source Localisation)
     # ---------------------------------------------------
@@ -474,7 +477,7 @@ class NonlinearController(Backend):
         else:
             return True
 
-
+    # TODO move stop conditions out of controller
     def stop_distance_cond(self) -> bool:
         stop = False
         # if the distance between robot and source is smaller than the stop distance

@@ -48,7 +48,7 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-
+        # TODO init settings from yaml file
         # Acquire the timeline that will be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
@@ -59,9 +59,6 @@ class PegasusApp:
         # spawning asset primitives, etc.
         self.pg._world = World(**self.pg._world_settings)
         self.world = self.pg.world
-
-        # Create an example timeline callback
-        self.world.add_timeline_callback('timeline_callback', self.timeline_callback)
 
         # Launch one of the worlds provided by NVIDIA
         # self.pg.load_environment(SIMULATION_ENVIRONMENTS["Curved Gridroom"])
@@ -76,7 +73,7 @@ class PegasusApp:
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig()
         self.controller = NonlinearController(
-            results_file=self.curr_dir + "/results/ecoli_statistics.npz",
+            # results_file=self.curr_dir + "/results/ecoli_statistics.npz",
             env_size=[[0.0, 0.0, 0.0], # env min x y z
                       [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],
@@ -96,19 +93,11 @@ class PegasusApp:
         # Reset the simulation environment so that all articulations (aka robots) are initialized
         self.world.reset()
 
-        # Auxiliar variable for the timeline callback example
+        # Auxiliar variable for repeated runs
+        self.runs = 3
+        self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
         self.stop_sim = False
-    
-
-    def timeline_callback(self, timeline_event):
-        """An example timeline callback. It will get invoked every time a timeline event occurs. In this example,
-        we will check if the event is for a 'simulation stop'. If so, we will attempt to close the app
-
-        Args:
-            timeline_event: A timeline event
-        """
-        if self.world.is_stopped():
-            self.stop_sim = False
+        self.quit_sim = False
 
 
     def run(self):
@@ -116,21 +105,24 @@ class PegasusApp:
         Method that implements the application main loop, where the physics steps are executed.
         """
 
-        # Start the simulation
-        self.timeline.play()
+        for i,statistics_file in enumerate(self.statistics):
+            # Set the results file
+            self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
 
-        # The "infinite" loop
-        while simulation_app.is_running() and not self.stop_sim:
+            # Start the simulation
+            self.timeline.play()
+        
+            while not self.controller.stop_bool:
+                # Update the UI of the app and perform the physics step
+                self.world.step(render=True)
 
-            if self.controller.stop_bool:
-                self.timeline.stop()
-                         
-            # Update the UI of the app and perform the physics step
-            self.world.step(render=True)
+            # Stop the simulation
+            self.timeline.stop()
+            carb.log_warn(f"Finished run {i+1}/{len(self.statistics)}")
         
         # Cleanup and stop
         carb.log_warn("PegasusApp Simulation App is closing.")
-        self.timeline.stop()
+        # self.timeline.stop()
         simulation_app.close()
 
 
