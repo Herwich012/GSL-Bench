@@ -48,7 +48,7 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-        # TODO init settings from yaml file
+        # TODO init settings from yaml file?
         # Acquire the timeline that will be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
