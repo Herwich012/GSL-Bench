@@ -105,6 +105,7 @@ class PegasusApp:
         Method that implements the application main loop, where the physics steps are executed.
         """
 
+        # Run the simulation again for every statistics file
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
             self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
