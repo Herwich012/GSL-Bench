@@ -71,7 +71,6 @@ class PegasusApp:
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig()
         self.controller = NonlinearController(
-            # results_file=self.curr_dir + "/results/ecoli_statistics.npz",
             env_size=[[0.0, 0.0, 0.0], # env min x y z
                       [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],
@@ -96,7 +95,7 @@ class PegasusApp:
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=10.0,
+        self.stop_cond = StopCondition(time=120.0,
                                        source_pos=np.array([5.0, 0.6, 2.0]), 
                                        distance2src=2.0)
 
@@ -118,6 +117,9 @@ class PegasusApp:
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
+
+            if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
+                self.controller.run_success[0] = True
 
             # Stop & Reset the simulation
             self.timeline.stop()

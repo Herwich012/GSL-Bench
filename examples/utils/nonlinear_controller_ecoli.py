@@ -65,6 +65,7 @@ class NonlinearController(Backend):
         self.m = 1.50        # Mass in Kg
         self.g = 9.81        # The gravity acceleration ms^-2
 
+        # TODO move most of these variables to trajectory class
         # Waypoint logic
         self.tr = TrajectoryMinJerk()
         self.avg_vel = 0.3 # average velocity [m/s] (< surge distance !!!)
@@ -133,12 +134,15 @@ class NonlinearController(Backend):
         # Lists used for analysing performance statistics
         self.results_files = None
         self.time_vector = []
-        self.desired_position_over_time = []
+        self.run_success = [False]
         self.position_over_time = []
-        self.position_error_over_time = []
-        self.velocity_error_over_time = []
-        self.atittude_error_over_time = []
-        self.attitude_rate_error_over_time = []
+        self.gas_conc_over_time = []
+        self.mox_raw_over_time = []
+        # self.desired_position_over_time = []
+        # self.position_error_over_time = []
+        # self.velocity_error_over_time = []
+        # self.atittude_error_over_time = []
+        # self.attitude_rate_error_over_time = []
 
 
     def start(self):
@@ -158,14 +162,17 @@ class NonlinearController(Backend):
             return
         
         statistics = {}
-        statistics["time"] = np.array(self.time_vector)
+        statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
         if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
-            statistics["p"] = np.vstack(self.position_over_time)
-            statistics["desired_p"] = np.vstack(self.desired_position_over_time)
-            statistics["ep"] = np.vstack(self.position_error_over_time)
-            statistics["ev"] = np.vstack(self.velocity_error_over_time)
-            statistics["er"] = np.vstack(self.atittude_error_over_time)
-            statistics["ew"] = np.vstack(self.attitude_rate_error_over_time)
+            statistics["run_success"] = np.vstack(self.run_success)
+            statistics["p"] = np.vstack(self.position_over_time[1:])
+            statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
+            statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
+            # statistics["desired_p"] = np.vstack(self.desired_position_over_time)
+            # statistics["ep"] = np.vstack(self.position_error_over_time)
+            # statistics["ev"] = np.vstack(self.velocity_error_over_time)
+            # statistics["er"] = np.vstack(self.atittude_error_over_time)
+            # statistics["ew"] = np.vstack(self.attitude_rate_error_over_time)
             np.savez(self.results_files, **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
 
@@ -353,11 +360,13 @@ class NonlinearController(Backend):
         # ----------------------------
         self.time_vector.append(self.total_time)
         self.position_over_time.append(self.p)
-        self.desired_position_over_time.append(p_ref)
-        self.position_error_over_time.append(ep)
-        self.velocity_error_over_time.append(ev)
-        self.atittude_error_over_time.append(e_R)
-        self.attitude_rate_error_over_time.append(e_w)
+        self.gas_conc_over_time.append(self.gas_conc)
+        self.mox_raw_over_time.append(self.mox_raw)
+        # self.desired_position_over_time.append(p_ref)
+        # self.position_error_over_time.append(ep)
+        # self.velocity_error_over_time.append(ev)
+        # self.atittude_error_over_time.append(e_R)
+        # self.attitude_rate_error_over_time.append(e_w)
 
 
     @staticmethod

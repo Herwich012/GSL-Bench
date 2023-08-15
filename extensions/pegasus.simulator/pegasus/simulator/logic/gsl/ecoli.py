@@ -73,7 +73,7 @@ class EcoliGSL():
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 
-    # TODO move out
+
     def check_in_env(self, wp:np.ndarray):
         """
         Method that returns True if waypoint is within the environment
