@@ -46,6 +46,7 @@ class MOX(Sensor):
         # Initialize the Super class "object" attributes
         super().__init__(sensor_type="MOX", update_rate=config.get("update_rate", 4.0))
         
+        # TODO: make configurable from main script
         # Location of the gas data
         self._env_name = config.get("env_name", "wh_empty_0000")
         self._gas_data_dir = f"/home/hajo/AutoGDM2/environments/gas_data/{self._env_name}/"

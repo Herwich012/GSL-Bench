@@ -132,6 +132,8 @@ class NonlinearController(Backend):
 
         # TODO add success rate, gas conc and mox reading
         # Lists used for analysing performance statistics
+        self.stat_iter = 0
+        self.stat_iter_save = 250
         self.results_files = None
         self.time_vector = []
         self.run_success = [False]
@@ -358,15 +360,22 @@ class NonlinearController(Backend):
         # ----------------------------
         # Statistics to save for later
         # ----------------------------
-        self.time_vector.append(self.total_time)
-        self.position_over_time.append(self.p)
-        self.gas_conc_over_time.append(self.gas_conc)
-        self.mox_raw_over_time.append(self.mox_raw)
-        # self.desired_position_over_time.append(p_ref)
-        # self.position_error_over_time.append(ep)
-        # self.velocity_error_over_time.append(ev)
-        # self.atittude_error_over_time.append(e_R)
-        # self.attitude_rate_error_over_time.append(e_w)
+        if self.stat_iter == 0:
+            print(f"Save at {self.total_time}")
+            self.time_vector.append(self.total_time)
+            self.position_over_time.append(self.p)
+            self.gas_conc_over_time.append(self.gas_conc)
+            self.mox_raw_over_time.append(self.mox_raw)
+            # self.desired_position_over_time.append(p_ref)
+            # self.position_error_over_time.append(ep)
+            # self.velocity_error_over_time.append(ev)
+            # self.atittude_error_over_time.append(e_R)
+            # self.attitude_rate_error_over_time.append(e_w)
+        
+        if self.stat_iter < self.stat_iter_save:
+            self.stat_iter += 1
+        else:
+            self.stat_iter = 0
 
 
     @staticmethod
