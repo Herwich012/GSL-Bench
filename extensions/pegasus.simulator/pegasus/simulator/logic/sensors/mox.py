@@ -82,9 +82,8 @@ class MOX(Sensor):
 
         self._time_tot = 0.0
 
-        # Save the current state measured by the MOX sensor: 
-        # [sensor_output, gas_conc, RS_R0]
-        self._state = {"sensor_output": np.zeros((3,))}
+        # Save the current state measured by the MOX sensor:
+        self._state = {"sensor_output": np.zeros((3,))} # [sensor_output, gas_conc, RS_R0]
 
     @property
     def state(self):
@@ -154,6 +153,19 @@ class MOX(Sensor):
 
         #print("{:.0f}".format(self._filament_iter), "{:.2f}".format(self._time_tot), "{:.6f}".format(self._sensor_output), "{:.6f}".format(self._gas_conc), "{:.6f}".format(self._RS_R0))
         return self._state
+
+    
+    # stop method to reset the gas iteration and sensor dynamics
+    def stop(self):
+        self._filament_iter = self._iter_start
+        self._sensor_output = 0.0
+        self._gas_conc = 0.0
+        self._RS_R0 = 0.0
+
+        self._first_reading = True
+
+        self._time_tot = 0.0
+        return
 
 
     def concentration_from_filament(self, loc:np.ndarray, filament:Filament, gas_data_head:np.ndarray):

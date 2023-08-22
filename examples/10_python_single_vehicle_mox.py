@@ -95,7 +95,7 @@ class PegasusApp:
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=120.0,
+        self.stop_cond = StopCondition(time=60.0,
                                        source_pos=np.array([5.0, 0.6, 2.0]), 
                                        distance2src=2.0)
 

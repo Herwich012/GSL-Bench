@@ -135,10 +135,13 @@ class Multirotor(Vehicle):
 
     def stop(self):
         """
-        Signal all the backends that the simulation has stoped. This method is invoked automatically when the simulation stops
+        Signal all the backends and MOX sensor that the simulation has stoped. 
+        This method is invoked automatically when the simulation stops
         """
         for backend in self._backends:
             backend.stop()
+
+        self._sensors[-1].stop() # reset MOX sensor
 
     def update(self, dt: float):
         """
