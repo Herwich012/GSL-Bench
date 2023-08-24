@@ -34,7 +34,8 @@ class StopCondition():
             carb.log_warn(f"Within stop distance ({round(self.stop_distance2src,2)}m), stopping simulation...")
 
         return stop
-    
+
+
     def stop_gas_concentration_cond(self) -> bool:
         stop = False
         # TODO implement gas concentration stop condition
@@ -49,5 +50,5 @@ class StopCondition():
         if self.stop_distance2src is not None and self.stop_distance2src_cond(pos_current):
             self.type = "dist2src"
             return True 
-        
+
         return False

@@ -2,7 +2,7 @@
 | File: multirotor_mox.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Marcelo Jacinto. All rights reserved.
-| Description: Definition of the Multirotor class including a Metal-Oxide (MOX) sensor
+| Description: Definition of the Multirotor class including a Metal-Oxide (MOX) sensor.
 """
 
 import numpy as np
@@ -141,7 +141,7 @@ class Multirotor(Vehicle):
         for backend in self._backends:
             backend.stop()
 
-        self._sensors[-1].stop() # reset MOX sensor
+        self._sensors[-1].stop() # stop MOX sensor
 
     def update(self, dt: float):
         """

@@ -34,6 +34,7 @@ class NonlinearController(Backend):
     """
 
     def __init__(self,
+        init_pos=np.zeros((3,)),
         env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
                   [np.inf,np.inf,np.inf]], # env max x y z
         Kp=[10.0, 10.0, 10.0],
@@ -42,11 +43,14 @@ class NonlinearController(Backend):
         Kr=[3.5, 3.5, 3.5],
         Kw=[0.5, 0.5, 0.5]):
 
+        # Initial position
+        self.init_pos = init_pos
+
         # The current rotor references [rad/s]
         self.input_ref = [0.0, 0.0, 0.0, 0.0]
 
         # The current state of the vehicle expressed in the inertial frame (in ENU)
-        self.p = np.zeros((3,))                   # The vehicle position
+        self.p = self.init_pos                    # The vehicle position
         self.R: Rotation = Rotation.identity()    # The vehicle attitude
         self.w = np.zeros((3,))                   # The angular velocity of the vehicle
         self.v = np.zeros((3,))                   # The linear velocity of the vehicle in the inertial frame
@@ -74,7 +78,7 @@ class NonlinearController(Backend):
         self.hold_end_time = np.inf # [s]
         self.hold_time = 3.0 # [s]
         self.waypoint_idx = 0
-        self.waypoints = np.array([[[1.5,1.5,0.2], # px, py, pz
+        self.waypoints = np.array([[[8.0,5.0,0.2], # px, py, pz # TODO - initialize x y to be initialized multirotor pos
                                     [0.0,0.0,0.0],  # vx, vy, vz
                                     [0.0,0.0,0.0]], # ax, ay, az
                                    [[8.0,5.0,2.0],
@@ -115,7 +119,6 @@ class NonlinearController(Backend):
         # Auxiliar variable, so that we only start sending motor commands once we get the state of the vehicle
         self.received_first_state = False
 
-        # TODO add success rate, gas conc and mox reading
         # Lists used for analysing performance statistics
         self.stat_iter = 0
         self.stat_iter_save = 250
@@ -125,6 +128,7 @@ class NonlinearController(Backend):
         self.position_over_time = []
         self.gas_conc_over_time = []
         self.mox_raw_over_time = []
+
 
     def start(self):
         """
@@ -151,10 +155,12 @@ class NonlinearController(Backend):
             statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
             np.savez(self.results_files, **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
-
+    
         self.reset_statistics()
         self.reset_waypoints()
         self.gsl.reset()
+        self.p = self.init_pos # reset position
+
 
     def update_sensor(self, sensor_type: str, data):
         """
@@ -240,10 +246,10 @@ class NonlinearController(Backend):
             self.index = 0
             self.max_index = np.shape(self.trajectory)[0] - 1
 
-            self.sensor_reading_prev = self.sensor_reading # set previous reading to current for next iteration
+            # self.sensor_reading_prev = self.sensor_reading # set previous reading to current for next iteration
             self.waypoint_idx += 1 # update waypoint index
             
-            print(f"Moving to waypoint {self.waypoint_idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
+            carb.log_warn(f"Moving to waypoint {self.waypoint_idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
 
         # Check if we need to update to the next trajectory index
         if self.index < self.max_index - 1: #and self.total_time >= self.trajectory[self.index + 1, 0]:
@@ -251,7 +257,7 @@ class NonlinearController(Backend):
         elif self.task_state == 'move2wp': # if task_state is hold, do not update the trajectory
             self.task_state = self.task_states[0] # hold
             self.hold_end_time = self.total_time + self.hold_time
-            print(f"Holding for {self.hold_time} seconds...")
+            carb.log_warn(f"Holding for {self.hold_time} seconds...")
 
         # set references for current timestep
         p_ref = np.array(self.trajectory[self.index, 0:3])

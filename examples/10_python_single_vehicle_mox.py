@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 """
-| File: 4_python_single_vehicle.py
-| Author: Marcelo Jacinto and Joao Pinto (marcelo.jacinto@tecnico.ulisboa.pt, joao.s.pinto@tecnico.ulisboa.pt)
-| License: BSD-3-Clause. Copyright (c) 2023, Marcelo Jacinto. All rights reserved.
-| Description: This files serves as an example on how to use the control backends API to create a custom controller 
-for the vehicle from scratch and use it to perform a simulation, without using PX4 nor ROS.
+| File: 10_python_single_vehicle_mox.py
+| Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
+| License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
+| Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
 """
 import numpy as np
 
@@ -67,10 +66,13 @@ class PegasusApp:
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
 
+        self.init_pos_1 = [8.0, 5.0, 0.2]
+        
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig()
         self.controller = NonlinearController(
+            init_pos=self.init_pos_1,
             env_size=[[0.0, 0.0, 0.0], # env min x y z
                       [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],
@@ -82,22 +84,22 @@ class PegasusApp:
             "/World/quadrotor1",
             ROBOTS['Iris'],
             0,
-            [1.5, 1.5, 0.2],
+            self.init_pos_1,
             Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
             config=config_multirotor1,
         )
-
-        # Reset the simulation environment so that all articulations (aka robots) are initialized
-        self.world.reset()
 
         # Auxiliar variable for repeated runs
         self.runs = 3
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=60.0,
+        self.stop_cond = StopCondition(time=120.0,
                                        source_pos=np.array([5.0, 0.6, 2.0]), 
                                        distance2src=2.0)
+        
+        # Reset the simulation environment so that all articulations (aka robots) are initialized
+        self.world.reset()
 
 
     def run(self):
@@ -112,7 +114,7 @@ class PegasusApp:
 
             # Start the simulation
             self.timeline.play()
-        
+
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
@@ -123,8 +125,8 @@ class PegasusApp:
 
             # Stop & Reset the simulation
             self.timeline.stop()
-            self.world.reset() # necessary to replicate 'UI stop button behaviour'
-            carb.log_warn(f"Finished run {i+1}/{len(self.statistics)}")
+            self.world.reset() # necessary to replicate the 'UI stop button' behaviour
+            carb.log_warn(f"Finished run {i+1}/{self.runs}")
         
         # Cleanup and quit
         carb.log_warn("PegasusApp Simulation App is closing.")

@@ -199,7 +199,8 @@ class MOX(Sensor):
             if gas_concentration == 0.0: # if statement because python math.pow() does not like infinity
                 RS_R0 = sensitivity_air[self._sensor_model]
             else:
-                RS_R0 = sensitivity_lineloglog[self._sensor_model][0][0] * math.pow(gas_concentration, sensitivity_lineloglog[self._sensor_model][0][1])
+                RS_R0 = sensitivity_lineloglog[self._sensor_model][0][0] * \
+                    math.pow(gas_concentration, sensitivity_lineloglog[self._sensor_model][0][1])
 
             # Ensure we never overpass the baseline level (max allowed)
             if (RS_R0 > sensitivity_air[self._sensor_model]):

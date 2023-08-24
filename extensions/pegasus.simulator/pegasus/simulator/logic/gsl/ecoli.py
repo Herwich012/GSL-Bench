@@ -69,7 +69,6 @@ class EcoliGSL():
 
 
     def reset(self):
-        #self.sensor_reading = 0.0
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 
