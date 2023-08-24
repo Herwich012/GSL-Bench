@@ -37,6 +37,7 @@ class NonlinearController(Backend):
         init_pos=np.zeros((3,)),
         env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
                   [np.inf,np.inf,np.inf]], # env max x y z
+        save_interval=1.0, # [s]
         Kp=[10.0, 10.0, 10.0],
         Kd=[8.5, 8.5, 8.5],
         Ki=[1.50, 1.50, 1.50],
@@ -78,10 +79,10 @@ class NonlinearController(Backend):
         self.hold_end_time = np.inf # [s]
         self.hold_time = 3.0 # [s]
         self.waypoint_idx = 0
-        self.waypoints = np.array([[[8.0,5.0,0.2], # px, py, pz # TODO - initialize x y to be initialized multirotor pos
+        self.waypoints = np.array([[self.init_pos, # px, py, pz
                                     [0.0,0.0,0.0],  # vx, vy, vz
                                     [0.0,0.0,0.0]], # ax, ay, az
-                                   [[8.0,5.0,2.0],
+                                   [[self.init_pos[0],self.init_pos[1],2.0], # TODO - make search height a parameter for E. Coli algorithm
                                     [0.0,0.0,0.0],
                                     [0.0,0.0,0.0]]])#,
                                 #    [[7.0,3.0,3.0],
@@ -120,8 +121,8 @@ class NonlinearController(Backend):
         self.received_first_state = False
 
         # Lists used for analysing performance statistics
-        self.stat_iter = 0
-        self.stat_iter_save = 250
+        self.save_time = 0.0
+        self.save_interval = save_interval
         self.results_files = None
         self.time_vector = []
         self.run_success = [False]
@@ -331,18 +332,16 @@ class NonlinearController(Backend):
             self.input_ref = self.vehicle.force_and_torques_to_velocities(u_1, tau)
 
         # ----------------------------
-        # Statistics to save for later
+        # Statistics to save for later at specified intervals
         # ----------------------------
-        if self.stat_iter == 0:
+        if self.save_time <= self.total_time:
             self.time_vector.append(self.total_time)
             self.position_over_time.append(self.p)
             self.gas_conc_over_time.append(self.gas_conc)
             self.mox_raw_over_time.append(self.mox_raw)
-        
-        if self.stat_iter < self.stat_iter_save:
-            self.stat_iter += 1
-        else:
-            self.stat_iter = 0
+
+            # update save time
+            self.save_time = self.total_time + self.save_interval
 
 
     @staticmethod
@@ -357,6 +356,7 @@ class NonlinearController(Backend):
 
     def reset_statistics(self):
         # Reset the lists used for analysing performance statistics
+        self.save_time = 0.0
         self.time_vector = []
         self.position_over_time = []
         self.run_success = [False]
