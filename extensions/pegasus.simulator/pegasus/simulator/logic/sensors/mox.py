@@ -26,18 +26,21 @@ class MOX(Sensor):
     """The class that implements a barometer sensor. This class inherits the base class Sensor.
     """
 
-    def __init__(self, config={}):
+    def __init__(self, config:dict={}):
         """Initialize the Barometer class
 
         Args:
-            config (dict): A Dictionary that contains all the parameters for configuring the Barometer - it can be empty or only have some of the parameters used by the Barometer.
+            config (dict): A Dictionary that contains all the parameters for configuring the MOX sensor.
+            it can be empty or only have some of the parameters used by the sensor.
             
         Examples:
             The dictionary default parameters are
 
-            >>> {"env_name": "wh_simple_0000"
+            >>> {"AutoGDM2_dir": '/home/user/AutoGDM2/',
+                 "env_name": 'wh_empty_0000',
+                 "env_id": 0000,
                  "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
-                 "update_rate": 8.0,  # [Hz] update rate of sensor
+                 "update_rate": 4.0,  # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                  "gas_data_start_iter": 0,  # start iteration
             >>>  "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
@@ -48,12 +51,13 @@ class MOX(Sensor):
         
         # TODO: make configurable from main script
         # Location of the gas data
+        self._AutoGDM2_dir = config.get("AutoGDM2_dir", "/home/user/AutoGDM2/")
         self._env_name = config.get("env_name", "wh_empty_0000")
-        self._gas_data_dir = f"/home/hajo/AutoGDM2/environments/gas_data/{self._env_name}/"
+        self._gas_data_dir = f"{self._AutoGDM2_dir}/environments/gas_data/{self._env_name}/"
         self._gas_data_files = os.listdir(self._gas_data_dir)
         
         # Gas data selection (iterations)
-        self._iter_start = config.get("gas_data_start_iter", 300)
+        self._iter_start = config.get("gas_data_start_iter", 0)
         iter_stop_input = config.get("gas_data_stop_iter", 0)
         self._filament_iter = self._iter_start
         
@@ -72,7 +76,7 @@ class MOX(Sensor):
         self._updates_per_gas_iter = int(self._gas_data_time_step/(1.0/self._update_rate)) - 1
 
         # Set sensor model
-        self._sensor_model = config.get("sensor_model", 1) # see mox_utils.py for sensor models
+        self._sensor_model = config.get("sensor_model", 0) # see mox_utils.py for sensor models
 
         self._sensor_output = 0.0
         self._gas_conc = 0.0
@@ -165,7 +169,17 @@ class MOX(Sensor):
         self._first_reading = True
 
         self._time_tot = 0.0
-        return
+
+
+    def config_from_dict(self, config_dict):
+        """Method that should be implemented by the class that inherits Sensor. This is where the configuration of the 
+        sensor based on a dictionary input should be performed.
+
+        Args:
+            config_dict (dict): A dictionary containing the configurations of the sensor
+        """
+        pass
+
 
 
     def concentration_from_filament(self, loc:np.ndarray, filament:Filament, gas_data_head:np.ndarray):

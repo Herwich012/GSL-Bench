@@ -48,8 +48,14 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-        # TODO init settings from yaml file
-        # Acquire the timeline that will be used to start/stop the simulation
+        # TODO init location of AutoGDM2 -> env specs, occ_grid, wind and gas data
+        # Point to the generated environment(s)
+        AutoGDM2_dir = '/home/hajo/AutoGDM2/'
+        env_type = 'wh_empty'
+        env_id = 0000
+        env_name = f'{env_type}_{env_id}'
+        
+        # Acquire the timeline thatfwill be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
         # Start the Pegasus Interface
@@ -61,24 +67,42 @@ class PegasusApp:
         self.world = self.pg.world
 
         # Launch one of the worlds provided AutoGDM2
-        self.pg.load_environment('/home/hajo/AutoGDM2/environments/isaac_sim/wh_empty_0000.usd')
+        self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
 
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
-
-        self.init_pos_1 = [8.0, 5.0, 0.2]
         
+        # Set spawn position of the multirotor
+        init_pos_1 = [8.0, 5.0, 0.2]
+
+        # Set sensor parameters
+        env_config = {"AutoGDM2_dir": AutoGDM2_dir,
+                    "env_name": env_name,
+                    "env_id": env_id}
+        mox_config = {"AutoGDM2_dir": AutoGDM2_dir,
+                      "env_name": env_name,
+                      "env_id": env_id,
+                      "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                      "update_rate": 4.0,  # [Hz] update rate of sensor
+                      "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
+                      "gas_data_start_iter": 300,  # start iteration
+                      "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+        sensor_configs = {'mox': mox_config}
+        config = {'env': env_config,
+                  'sensor': sensor_configs}
+
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig()
         self.controller = NonlinearController(
-            init_pos=self.init_pos_1,
+            init_pos=init_pos_1,
             env_size=[[0.0, 0.0, 0.0], # env min x y z
                       [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
         config_multirotor1.backends = [self.controller]
+        config_multirotor1.sensor_configs = sensor_configs
 
         Multirotor(
             "/World/quadrotor1",

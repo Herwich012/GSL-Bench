@@ -35,9 +35,13 @@ class MultirotorConfig:
         # The default thrust curve for a quadrotor and dynamics relating to drag
         self.thrust_curve = QuadraticThrustCurve()
         self.drag = LinearDrag([0.50, 0.30, 0.0])
+ 
+        # Get the sensor configurations
+        self.sensor_configs:dict = None
 
         # The default sensors for a quadrotor + MOX
-        self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), MOX()]
+        self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
+                        MOX(config=self.sensor_configs['mox'])]
 
         # The backends for actually sending commands to the vehicle. By default use mavlink (with default mavlink configurations)
         # [Can be None as well, if we do not desired to use PX4 with this simulated vehicle]. It can also be a ROS2 backend

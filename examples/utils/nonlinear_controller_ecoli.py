@@ -147,7 +147,7 @@ class NonlinearController(Backend):
         if self.results_files is None:
             return
         
-        statistics = {}
+        statistics = {} # TODO - check if skipping the first entry is still necessary
         statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
         if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
             statistics["run_success"] = np.vstack(self.run_success)
