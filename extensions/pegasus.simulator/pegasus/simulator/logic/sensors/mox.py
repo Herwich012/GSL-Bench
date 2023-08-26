@@ -53,7 +53,7 @@ class MOX(Sensor):
         # Location of the gas data
         self._AutoGDM2_dir = config.get("AutoGDM2_dir", "/home/user/AutoGDM2/")
         self._env_name = config.get("env_name", "wh_empty_0000")
-        self._gas_data_dir = f"{self._AutoGDM2_dir}/environments/gas_data/{self._env_name}/"
+        self._gas_data_dir = f"{self._AutoGDM2_dir}environments/gas_data/{self._env_name}/"
         self._gas_data_files = os.listdir(self._gas_data_dir)
         
         # Gas data selection (iterations)

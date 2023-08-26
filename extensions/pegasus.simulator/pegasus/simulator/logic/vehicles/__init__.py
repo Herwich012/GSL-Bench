@@ -5,4 +5,4 @@
 
 from .vehicle import Vehicle
 from .multirotor import Multirotor, MultirotorConfig
-from .multirotor_mox import Multirotor, MultirotorConfig
+from .multirotor_gsl import Multirotor, MultirotorConfig

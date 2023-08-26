@@ -24,7 +24,7 @@ from omni.isaac.core.world import World
 
 # Import the Pegasus API for simulating drones
 from pegasus.simulator.params import ROBOTS, SIMULATION_ENVIRONMENTS
-from pegasus.simulator.logic.vehicles.multirotor_mox import Multirotor, MultirotorConfig
+from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorConfig
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend

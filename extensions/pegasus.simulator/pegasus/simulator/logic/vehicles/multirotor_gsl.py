@@ -1,5 +1,5 @@
 """
-| File: multirotor_mox.py
+| File: multirotor_gsl.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Marcelo Jacinto. All rights reserved.
 | Description: Definition of the Multirotor class including a Metal-Oxide (MOX) sensor.
@@ -21,7 +21,10 @@ class MultirotorConfig:
     A data class that is used for configuring a Multirotor
     """
 
-    def __init__(self):
+    def __init__(self,
+                 # Sensor config
+                 sensor_configs:dict={}
+                 ):
         """
         Initialization of the MultirotorConfig class
         """
@@ -37,11 +40,11 @@ class MultirotorConfig:
         self.drag = LinearDrag([0.50, 0.30, 0.0])
  
         # Get the sensor configurations
-        self.sensor_configs:dict = None
+        self.sensor_configs = sensor_configs
 
         # The default sensors for a quadrotor + MOX
         self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
-                        MOX(config=self.sensor_configs['mox'])]
+                        MOX(config=self.sensor_configs.get('mox', {}))]
 
         # The backends for actually sending commands to the vehicle. By default use mavlink (with default mavlink configurations)
         # [Can be None as well, if we do not desired to use PX4 with this simulated vehicle]. It can also be a ROS2 backend
@@ -61,7 +64,7 @@ class Multirotor(Vehicle):
         # Spawning pose of the vehicle
         init_pos=[0.0, 0.0, 0.07],
         init_orientation=[0.0, 0.0, 0.0, 1.0],
-        config=MultirotorConfig(),
+        config:MultirotorConfig=None
     ):
         """Initializes the multirotor object
 

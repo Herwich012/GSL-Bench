@@ -24,7 +24,7 @@ from omni.isaac.core.world import World
 
 # Import the Pegasus API for simulating drones
 from pegasus.simulator.params import ROBOTS, SIMULATION_ENVIRONMENTS
-from pegasus.simulator.logic.vehicles.multirotor_mox import Multirotor, MultirotorConfig
+from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, MultirotorConfig
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
@@ -52,8 +52,8 @@ class PegasusApp:
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
         env_type = 'wh_empty'
-        env_id = 0000
-        env_name = f'{env_type}_{env_id}'
+        env_id = 0
+        env_name = f'{env_type}_{str(env_id).zfill(4)}'
         
         # Acquire the timeline thatfwill be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
@@ -76,9 +76,6 @@ class PegasusApp:
         init_pos_1 = [8.0, 5.0, 0.2]
 
         # Set sensor parameters
-        env_config = {"AutoGDM2_dir": AutoGDM2_dir,
-                    "env_name": env_name,
-                    "env_id": env_id}
         mox_config = {"AutoGDM2_dir": AutoGDM2_dir,
                       "env_name": env_name,
                       "env_id": env_id,
@@ -88,12 +85,10 @@ class PegasusApp:
                       "gas_data_start_iter": 300,  # start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         sensor_configs = {'mox': mox_config}
-        config = {'env': env_config,
-                  'sensor': sensor_configs}
 
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
-        config_multirotor1 = MultirotorConfig()
+        config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
             init_pos=init_pos_1,
             env_size=[[0.0, 0.0, 0.0], # env min x y z
@@ -102,13 +97,12 @@ class PegasusApp:
             Kr=[2.0, 2.0, 2.0]
         )
         config_multirotor1.backends = [self.controller]
-        config_multirotor1.sensor_configs = sensor_configs
 
         Multirotor(
             "/World/quadrotor1",
             ROBOTS['Iris'],
             0,
-            self.init_pos_1,
+            init_pos_1,
             Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
             config=config_multirotor1,
         )
