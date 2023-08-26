@@ -84,7 +84,16 @@ class PegasusApp:
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                       "gas_data_start_iter": 300,  # start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
-        sensor_configs = {'mox': mox_config}
+        anemo_config = {"AutoGDM2_dir": AutoGDM2_dir,
+                        "env_name": env_name,
+                        "env_id": env_id,
+                        "update_rate": 4.0,  # [Hz] update rate of sensor
+                        "wind_data_time_step": 1.0, # [s] time steps between wind data iterations (in seconds to match GADEN)
+                        "wind_data_start_iter": 0,  # start iteration
+                        "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+        
+        sensor_configs = {'mox': mox_config,
+                          'anemometer': anemo_config}
 
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace

@@ -10,6 +10,7 @@ import os
 import re
 import math
 import numpy as np
+from typing import Tuple
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.sensors import Sensor
 from pegasus.simulator.logic.sensors.mox_utils import (
@@ -23,11 +24,11 @@ from pegasus.simulator.logic.sensors.mox_utils import (
 
 
 class MOX(Sensor):
-    """The class that implements a barometer sensor. This class inherits the base class Sensor.
+    """The class that implements a metal oxide (MOX) sensor. This class inherits the base class Sensor.
     """
 
     def __init__(self, config:dict={}):
-        """Initialize the Barometer class
+        """Initialize the MOX class
 
         Args:
             config (dict): A Dictionary that contains all the parameters for configuring the MOX sensor.
@@ -49,7 +50,7 @@ class MOX(Sensor):
         # Initialize the Super class "object" attributes
         super().__init__(sensor_type="MOX", update_rate=config.get("update_rate", 4.0))
         
-        # TODO: make configurable from main script
+        # TODO - put all filament iterations into one array
         # Location of the gas data
         self._AutoGDM2_dir = config.get("AutoGDM2_dir", "/home/user/AutoGDM2/")
         self._env_name = config.get("env_name", "wh_empty_0000")
@@ -120,7 +121,7 @@ class MOX(Sensor):
         elif self._update_iter != self._updates_per_gas_iter:
             self._update_iter += 1 # update the sensor, not the filament data
         else:
-            self._update_iter = 0 # loop to the first filament update
+            self._update_iter = 0 # loop to the first sensor update
             self._filament_iter += 1 # update to new filament data
 
         # Initialize gas data, iterate after every gas_iteration_time_step
@@ -160,7 +161,7 @@ class MOX(Sensor):
 
     
     # stop method to reset the gas iteration and sensor dynamics
-    def stop(self):
+    def stop(self) -> None:
         self._filament_iter = self._iter_start
         self._sensor_output = 0.0
         self._gas_conc = 0.0
@@ -171,18 +172,7 @@ class MOX(Sensor):
         self._time_tot = 0.0
 
 
-    def config_from_dict(self, config_dict):
-        """Method that should be implemented by the class that inherits Sensor. This is where the configuration of the 
-        sensor based on a dictionary input should be performed.
-
-        Args:
-            config_dict (dict): A dictionary containing the configurations of the sensor
-        """
-        pass
-
-
-
-    def concentration_from_filament(self, loc:np.ndarray, filament:Filament, gas_data_head:np.ndarray):
+    def concentration_from_filament(self, loc:np.ndarray, filament:Filament, gas_data_head:np.ndarray) -> float:
         distance_cm = 100 * math.sqrt(math.pow((loc[0] - filament.x),2) + math.pow((loc[1] - filament.y),2) + \
                                       math.pow((loc[2] - filament.z),2))
 
@@ -193,7 +183,7 @@ class MOX(Sensor):
         return ppm
 
 
-    def simulate_mox_as_line_loglog(self, dt:float, gas_concentration:float):
+    def simulate_mox_as_line_loglog(self, dt:float, gas_concentration:float) -> Tuple[float,float]:
         # Initialize sensor if it is the first reading
         if self._first_reading:
             sensor_output = RS_R0 = sensitivity_air[self._sensor_model] # RS_R0 value at air

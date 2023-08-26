@@ -9,3 +9,4 @@ from .gps import GPS
 from .imu import IMU
 from .magnetometer import Magnetometer
 from .mox import MOX
+from .anemometer import Anemometer
