@@ -5,6 +5,7 @@
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
 """
+import yaml
 import numpy as np
 
 # Imports to start Isaac Sim from this script
@@ -54,7 +55,11 @@ class PegasusApp:
         env_type = 'wh_empty'
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
-        
+
+        # Environment specifications
+        with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+            env_spec = yaml.safe_load(file)
+
         # Acquire the timeline thatfwill be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
@@ -79,6 +84,7 @@ class PegasusApp:
         mox_config = {"AutoGDM2_dir": AutoGDM2_dir,
                       "env_name": env_name,
                       "env_id": env_id,
+                      "env_spec": env_spec, # env_min, env_max, num_cells, cell_size
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "update_rate": 4.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
@@ -87,6 +93,7 @@ class PegasusApp:
         anemo_config = {"AutoGDM2_dir": AutoGDM2_dir,
                         "env_name": env_name,
                         "env_id": env_id,
+                        "env_spec": env_spec,
                         "update_rate": 4.0,  # [Hz] update rate of sensor
                         "wind_data_time_step": 1.0, # [s] time steps between wind data iterations (in seconds to match GADEN)
                         "wind_data_start_iter": 0,  # start iteration

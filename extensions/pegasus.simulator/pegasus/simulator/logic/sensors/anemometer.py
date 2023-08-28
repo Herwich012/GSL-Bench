@@ -1,17 +1,15 @@
 """
-| File: mox.py
+| File: anemometer.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
-| Description: Simulates a Metal-oxide gas sensor. Based on the implementation provided by GADEN (https://github.com/MAPIRlab/gaden)
+| Description: Simulates a anemometer. Based on the implementation provided by GADEN (https://github.com/MAPIRlab/gaden)
 """
 __all__ = ["Anemometer"]
 
-import os
-import re
 import carb
-import yaml
 import math
 import numpy as np
+from typing import Tuple
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.sensors import Sensor
 
@@ -33,10 +31,12 @@ class Anemometer(Sensor):
             >>> {"AutoGDM2_dir": '/home/user/AutoGDM2/',
                  "env_name": 'wh_empty_0000',
                  "env_id": 0000,
+                 "env_spec": {"env_min": [0.0, 0.0, 0.0],..., "cell_size": 0.1},
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "wind_data_time_step": 0.5, # [s] time steps between wind data iterations (in seconds to match GADEN)
                  "wind_data_start_iter": 0,  # start iteration
-            >>>  "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+                 "wind_data_stop_iter": 0,   # stop iteration (0 -> to the last iteration)
+            >>>  "noise_std": 0.1} # sensor noise standard deviation
         """
 
         # Initialize the Super class "object" attributes
@@ -48,9 +48,11 @@ class Anemometer(Sensor):
         self._wind_data_file = f"{self._AutoGDM2_dir}environments/wind_data/{self._env_name}.npy"
         self._wind_data = np.load(self._wind_data_file)
 
-        # Environment specifications
-        with open(f'{self._AutoGDM2_dir}environments/occupancy/{self._env_name}_head.txt', 'r') as file:
-            self._env_dict = yaml.safe_load(file)
+        # Environment specification
+        self._env_spec = config.get("env_spec", {"env_min": [0.0, 0.0, 0.0],
+                                                 "env_max": [10.0, 10.0, 10.0,],
+                                                 "num_cells": [100.0, 100.0, 100.0],
+                                                 "cell_size": 0.1})
         
         # Check for multiple windfields, if there is only one it will be used as steady state:
         if np.shape(self._wind_data)[0] == 1:
@@ -73,15 +75,19 @@ class Anemometer(Sensor):
         # Required/recommended for the update rate to be equal of a multiple of the wind data iteration rate
         self._update_iter = 0
         self._update_rate = config.get("update_rate", 4.0) # [Hz] !!!
-        self._wind_data_time_step = config.get("gas_data_time_step", 0.5) # [s] !!!
+        self._wind_data_time_step = config.get("wind_data_time_step", 0.5) # [s] !!!
         self._updates_per_wind_iter = int(self._wind_data_time_step/(1.0/self._update_rate)) - 1
 
-        self._sensor_output = np.zeros((3,))
-        self._first_reading = True
+        self._wind_vec = np.zeros((3,)) # raw wind vector in inertial frame
+        self._upwind_angle = 0.0
+        self._windspeed = 0.0
         self._time_tot = 0.0
+        self._sensor_noise = config.get("noise_std", 0.1)
 
-        # Save the current state measured by the MOX sensor:
-        self._state = {"sensor_output": self._sensor_output} # [U, V, W]
+        # Save the current state measured by the anemometer :
+        self._state = {"wind_vector": self._wind_vec, # [U, V, W] [m/s]
+                       "upwind_angle": self._upwind_angle, # [rad]
+                       "windspeed": self._windspeed} # [m/s]
 
     @property
     def state(self):
@@ -102,7 +108,7 @@ class Anemometer(Sensor):
             (dict) A dictionary containing the current state of the sensor (the data produced by the sensor)
         """
 
-        # Update time step and gas iteration if necessary:
+        # Update time step and wind iteration if necessary:
         # new wind_data                       new wind_data                            new wind_data
         # ||---------|---------|---------|---------||---------|---------|---------|---------||---------|---------|---------|---------
         # start    update    update   update     update     update   update    update      stop     update   update    update    loop to start
@@ -120,47 +126,62 @@ class Anemometer(Sensor):
                 self._update_iter = 0 # loop to the first sensor update
                 self._wind_iter += 1 # update to new windfield
 
-            # Initialize gas data, iterate after every gas_iteration_time_step
+            # Initialize wind data, iterate after every wind_iteration_time_step
             # print(f"wind iter: {self._wind_iter}")
             # print(f"update iter: {self._update_iter}")
             if self._update_iter == 0:
                 wind_data = self._wind_data[self._wind_iter]
             
         
-        # Get gas concentration [ppm] at location
+        # Get wind vector at location
         loc = state.position
-        #loc = np.array([7.5, 5.0, 3.0]) # fixed test location
-
-        self._sensor_output = wind_data[self.index_from_3D(loc)]
+        #loc = np.array([5.0, 3.0, 2.0]) # fixed test location
+        
+        cell_idx = self.cell_idx_from_pos(loc)
+        self._wind_vec = wind_data[self.index_from_cell_idx(cell_idx)]
 
         # Simulate anemometer sensor response
-        # self._sensor_output = self.simulate_anemometer(dt, self._gas_conc)
+        self._upwind_angle, self._windspeed = self.simulate_anemometer(self._wind_vec, state)
 
         # Add the values to the dictionary and return it
-        self._state = {"sensor_output": self._sensor_output}
+        self._state = {"wind_vector": self._wind_vec, # [U, V, W] [m/s]
+                       "upwind_angle": self._upwind_angle, # [rad]
+                       "windspeed": self._windspeed} # [m/s]
 
-        print(f"ANEMOMETER OUTPUT: {self._sensor_output}")
+        print(f"[ANEMOMETER]: angle:{'{:.4f}'.format(self._upwind_angle)} speed: {'{:.4f}'.format(self._windspeed)}")
         return self._state
 
     
-    # stop method to reset the gas iteration and sensor dynamics
+    # stop method to reset the wind iteration and sensor dynamics
     def stop(self) -> None:
         if not self._steady_state:
             self._wind_iter = self._iter_start
-        self._sensor_output = np.zeros(3,)
-        self._gas_conc = 0.0
-        self._RS_R0 = 0.0
-
-        self._first_reading = True
-
+        
         self._time_tot = 0.0
 
-    # TODO - add heading, velocity and noise
-    def simulate_anemometer(self):
-        pass
+    # TODO - make anemometer rotate with the body frame (the body does not rotate for now so its ok)
+    def simulate_anemometer(self, wind_vec:np.ndarray, state:State) -> Tuple[float,float]:
+        noise = np.random.normal(0.0, self._sensor_noise, (2,)) # generate sensor noise
+        wind_vec_apparent = wind_vec - state.linear_velocity # apparent wind in inertial orientation, but body velocity
+        
+        wind_speed_XY = np.linalg.norm(wind_vec_apparent[:-1]) + noise[0]
+        
+        # (IMPORTANT) Follow standards on wind measurement (real anemometers):
+        # return the upwind direction in the inertial ref system, ENU convention (y-dir = North)
+        # range [-pi,pi], positive to the right      
+        upwind_angle = np.arctan2(-wind_vec_apparent[0], -wind_vec_apparent[1]) + noise[1] # negative for upwind dir!
+
+        return upwind_angle, wind_speed_XY
 
 
-    def index_from_3D(self, loc:np.ndarray) -> int:
-        return math.floor(loc[0]) + \
-            (math.floor(loc[1])*self._env_dict["num_cells"][0]) + \
-            (math.floor(loc[2])*self._env_dict["num_cells"][0]*self._env_dict["num_cells"][1])
+    def cell_idx_from_pos(self, loc:np.ndarray) -> np.ndarray:
+        xx = math.ceil((loc[0]-self._env_spec["env_min"][0])/self._env_spec["cell_size"])
+        yy = math.ceil((loc[1]-self._env_spec["env_min"][1])/self._env_spec["cell_size"])
+        zz = math.ceil((loc[2]-self._env_spec["env_min"][2])/self._env_spec["cell_size"])
+        return np.array([xx,yy,zz])
+
+
+    def index_from_cell_idx(self, idx:np.ndarray) -> int:
+        return idx[0] + \
+            (idx[1]*self._env_spec["num_cells"][0]) + \
+            (idx[2]*self._env_spec["num_cells"][0]*self._env_spec["num_cells"][1])
