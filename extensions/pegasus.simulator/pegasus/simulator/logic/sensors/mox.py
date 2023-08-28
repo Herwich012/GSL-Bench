@@ -74,7 +74,7 @@ class MOX(Sensor):
         self._update_iter = 0
         self._update_rate = config.get("update_rate", 4.0) # [Hz] !!!
         self._gas_data_time_step = config.get("gas_data_time_step", 0.5) # [s] !!!
-        self._updates_per_gas_iter = int(self._gas_data_time_step/(1.0/self._update_rate)) - 1
+        self._updates_per_gas_iter = int(self._gas_data_time_step*self._update_rate) - 1
 
         # Set sensor model
         self._sensor_model = config.get("sensor_model", 0) # see mox_utils.py for sensor models

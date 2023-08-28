@@ -33,7 +33,7 @@ class Anemometer(Sensor):
                  "env_id": 0000,
                  "env_spec": {"env_min": [0.0, 0.0, 0.0],..., "cell_size": 0.1},
                  "update_rate": 4.0,  # [Hz] update rate of sensor
-                 "wind_data_time_step": 0.5, # [s] time steps between wind data iterations (in seconds to match GADEN)
+                 "wind_data_time_step": 1.0, # [s] time steps between wind data iterations (in seconds to match GADEN)
                  "wind_data_start_iter": 0,  # start iteration
                  "wind_data_stop_iter": 0,   # stop iteration (0 -> to the last iteration)
             >>>  "noise_std": 0.1} # sensor noise standard deviation
@@ -57,6 +57,7 @@ class Anemometer(Sensor):
         # Check for multiple windfields, if there is only one it will be used as steady state:
         if np.shape(self._wind_data)[0] == 1:
             self._steady_state = True
+            self._wind_iter = 0
             carb.log_warn("Only one windfield in the data, using it as steady state...")
         else:
             self._steady_state = False
@@ -67,7 +68,7 @@ class Anemometer(Sensor):
             self._wind_iter = self._iter_start
             
             if iter_stop_input == 0: # loop until the last iteration
-                self._iter_stop = np.shape(self._wind_data)[0]
+                self._iter_stop = np.shape(self._wind_data)[0] - 1
             else:
                 self._iter_stop = iter_stop_input
 
@@ -75,8 +76,8 @@ class Anemometer(Sensor):
         # Required/recommended for the update rate to be equal of a multiple of the wind data iteration rate
         self._update_iter = 0
         self._update_rate = config.get("update_rate", 4.0) # [Hz] !!!
-        self._wind_data_time_step = config.get("wind_data_time_step", 0.5) # [s] !!!
-        self._updates_per_wind_iter = int(self._wind_data_time_step/(1.0/self._update_rate)) - 1
+        self._wind_data_time_step = config.get("wind_data_time_step", 1.0) # [s] !!!
+        self._updates_per_wind_iter = int(self._wind_data_time_step*self._update_rate) - 1
 
         self._wind_vec = np.zeros((3,)) # raw wind vector in inertial frame
         self._upwind_angle = 0.0
@@ -88,6 +89,9 @@ class Anemometer(Sensor):
         self._state = {"wind_vector": self._wind_vec, # [U, V, W] [m/s]
                        "upwind_angle": self._upwind_angle, # [rad]
                        "windspeed": self._windspeed} # [m/s]
+        
+        # Auxiliary bool:
+        self._first_reading = True
 
     @property
     def state(self):
@@ -114,8 +118,8 @@ class Anemometer(Sensor):
         # start    update    update   update     update     update   update    update      stop     update   update    update    loop to start
         self._time_tot += dt
 
-        if self._steady_state:
-            wind_data = self._wind_data[0]
+        if self._steady_state or self._first_reading:
+            pass
         else:
             if self._wind_iter == self._iter_stop and self._update_iter == self._updates_per_wind_iter:
                 self._update_iter = 0 # loop to first windfield
@@ -126,12 +130,10 @@ class Anemometer(Sensor):
                 self._update_iter = 0 # loop to the first sensor update
                 self._wind_iter += 1 # update to new windfield
 
-            # Initialize wind data, iterate after every wind_iteration_time_step
-            # print(f"wind iter: {self._wind_iter}")
-            # print(f"update iter: {self._update_iter}")
-            if self._update_iter == 0:
-                wind_data = self._wind_data[self._wind_iter]
-            
+        # Select wind data, iterate after every wind_iteration_time_step
+        print(f"wind iter: {self._wind_iter}")
+        print(f"update iter: {self._update_iter}")
+        wind_data = self._wind_data[self._wind_iter]
         
         # Get wind vector at location
         loc = state.position
@@ -147,8 +149,11 @@ class Anemometer(Sensor):
         self._state = {"wind_vector": self._wind_vec, # [U, V, W] [m/s]
                        "upwind_angle": self._upwind_angle, # [rad]
                        "windspeed": self._windspeed} # [m/s]
+        
+        # Set first reading to False
+        self._first_reading = False
 
-        print(f"[ANEMOMETER]: angle:{'{:.4f}'.format(self._upwind_angle)} speed: {'{:.4f}'.format(self._windspeed)}")
+        # print(f"[ANEMOMETER]: angle: {'{:.4f}'.format(self._upwind_angle)} speed: {'{:.4f}'.format(self._windspeed)}")
         return self._state
 
     
