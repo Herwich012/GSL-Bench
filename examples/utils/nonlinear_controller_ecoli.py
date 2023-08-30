@@ -16,7 +16,7 @@ import carb
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
-from pegasus.simulator.logic.gsl.ecoli import EcoliGSL
+from pegasus.simulator.logic.gsl.ecoli import E_Coli
 
 # Auxiliary scipy
 from scipy.spatial.transform import Rotation
@@ -82,7 +82,7 @@ class NonlinearController(Backend):
         self.waypoints = np.array([[self.init_pos, # px, py, pz
                                     [0.0,0.0,0.0],  # vx, vy, vz
                                     [0.0,0.0,0.0]], # ax, ay, az
-                                   [[self.init_pos[0],self.init_pos[1],2.0], # TODO - make search height a parameter for E. Coli algorithm
+                                   [[self.init_pos[0],self.init_pos[1],6.0], # TODO - make search height a parameter for E. Coli algorithm
                                     [0.0,0.0,0.0],
                                     [0.0,0.0,0.0]]])#,
                                 #    [[7.0,3.0,3.0],
@@ -113,7 +113,7 @@ class NonlinearController(Backend):
         self.RS_R0 = 0.0
 
         # GSL algorithm
-        self.gsl = EcoliGSL(surge_distance= 0.5,
+        self.gsl = E_Coli(surge_distance= 0.5,
                             env_bounds=env_size,
                             env_bound_sep=0.5)
 

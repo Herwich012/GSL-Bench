@@ -3,13 +3,17 @@
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
 import carb
-import numpy as np  
+import numpy as np
+from pegasus.simulator.logic.gsl import GSL  
 
-class EcoliGSL():
+class E_Coli(GSL):
     def __init__(self,
                  surge_distance:float = 0.5,
                  env_bound_sep:float = 0.5, # [m] min distance from environment bounds
                  env_bounds:list = [[0,0,0],[10,10,10]]) -> None:
+        
+        # Initialize the Super class "object" attributes
+        super().__init__(gsl_type="E_Coli")
         
         self.surge_dist = surge_distance
         self.env_bounds_sep = env_bound_sep

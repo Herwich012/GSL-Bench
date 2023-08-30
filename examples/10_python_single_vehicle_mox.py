@@ -52,7 +52,7 @@ class PegasusApp:
         # TODO init location of AutoGDM2 -> env specs, occ_grid, wind and gas data
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_empty'
+        env_type = 'wh_simple'
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
@@ -128,8 +128,8 @@ class PegasusApp:
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=120.0,
-                                       source_pos=np.array([5.0, 0.6, 2.0]), 
+        self.stop_cond = StopCondition(time=60.0,
+                                       source_pos=np.array([5.0, 0.6, 2.0]), # TODO - read source_pos from settings
                                        distance2src=2.0)
         
         # Reset the simulation environment so that all articulations (aka robots) are initialized

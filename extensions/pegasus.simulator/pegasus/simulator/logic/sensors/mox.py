@@ -40,6 +40,7 @@ class MOX(Sensor):
             >>> {"AutoGDM2_dir": '/home/user/AutoGDM2/',
                  "env_name": 'wh_empty_0000',
                  "env_id": 0000,
+                 "env_spec": {"env_min": [0.0, 0.0, 0.0],..., "cell_size": 0.1},
                  "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
@@ -116,8 +117,8 @@ class MOX(Sensor):
         self._time_tot += dt
 
         if self._filament_iter == self._iter_stop and self._update_iter == self._updates_per_gas_iter:
-            self._update_iter = 0 # loop to first filament data
-            self._filament_iter = self._iter_start
+            self._update_iter = 0 # loop to first sensor update
+            self._filament_iter = self._iter_start # loop to first filament data
         elif self._update_iter != self._updates_per_gas_iter:
             self._update_iter += 1 # update the sensor, not the filament data
         else:

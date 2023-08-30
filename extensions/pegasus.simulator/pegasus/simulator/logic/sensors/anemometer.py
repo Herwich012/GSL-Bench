@@ -122,8 +122,8 @@ class Anemometer(Sensor):
             pass
         else:
             if self._wind_iter == self._iter_stop and self._update_iter == self._updates_per_wind_iter:
-                self._update_iter = 0 # loop to first windfield
-                self._wind_iter = self._iter_start
+                self._update_iter = 0 # loop to first sensor update
+                self._wind_iter = self._iter_start # loop to first windfield
             elif self._update_iter != self._updates_per_wind_iter:
                 self._update_iter += 1 # update the sensor, not the windfield
             else:
@@ -131,8 +131,8 @@ class Anemometer(Sensor):
                 self._wind_iter += 1 # update to new windfield
 
         # Select wind data, iterate after every wind_iteration_time_step
-        print(f"wind iter: {self._wind_iter}")
-        print(f"update iter: {self._update_iter}")
+        # print(f"wind iter: {self._wind_iter}")
+        # print(f"update iter: {self._update_iter}")
         wind_data = self._wind_data[self._wind_iter]
         
         # Get wind vector at location
