@@ -75,7 +75,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 3.0 # [s]
-        self.search_height = 6.0 # [m]
+        self.search_height = 5.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -237,10 +237,10 @@ class NonlinearController(Backend):
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
                 if obstacle_check == 1: # path obstructed
                     self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
-                    self.end_wp = self.waypoints.get()[1]
+                    self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
                 elif obstacle_check == 2: # end_wp in obstacle
                     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
-                    self.end_wp = self.waypoints.get()[1]
+                    self.end_wp = self.waypoints.get()[0]
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 
@@ -368,12 +368,13 @@ class NonlinearController(Backend):
     def reset_controller(self):
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
+        self.waypoints.set_takeoff()
 
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
-        self.trajectory[0, 0:3] = np.array([self.takeoff[0,0,:]])
-        self.trajectory[0, 3:6] = np.array([self.takeoff[0,1,:]])
-        self.trajectory[0, 6:9] = np.array([self.takeoff[0,2,:]])
+        self.trajectory[0, 0:3] = np.array([self.waypoints.get()[0,0,:]])
+        self.trajectory[0, 3:6] = np.array([self.waypoints.get()[0,1,:]])
+        self.trajectory[0, 6:9] = np.array([self.waypoints.get()[0,2,:]])
         
         self.index = 0
         self.max_index = 0

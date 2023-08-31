@@ -75,7 +75,7 @@ class ObstacleAvoidance:
         path, path_cells = a_star(start_2D, end_2D, self._gmap, movement='4N')
         
         # get the idx of only the necessary points in the path
-        shortcut_idx = shortcut_path(self._env_spec, self._occ_data, path, path_cells, self._altitude)
+        shortcut_idx = shortcut_path(self._env_spec, self._occ_data, path, path_cells)
 
         # make waypoints
         waypoints = np.zeros((len(shortcut_idx),3,3))
@@ -92,7 +92,7 @@ class ObstacleAvoidance:
         end_2D = end_wp[0,:2]
         points_xy = outside_obstacle2D(self._env_spec, self._occ_data, start_2D, end_2D)
         
-        waypoints = np.zeros((1,3,3))
-        waypoints[0,:2] = points_xy[-1]
+        waypoint = np.zeros((1,3,3))
+        waypoint[0,0,:] = np.array([points_xy[-1][0], points_xy[-1][1],start_wp[0,2]])
 
-        return np.zeros((3,3))
+        return waypoint
