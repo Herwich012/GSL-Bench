@@ -74,8 +74,8 @@ class NonlinearController(Backend):
         self.g = 9.81        # The gravity acceleration ms^-2
 
         # Controller related parameters
-        self.hold_time = 3.0 # [s]
-        self.search_height = 5.0 # [m]
+        self.hold_time = 2.0 # [s]
+        self.search_height = 3.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -88,10 +88,10 @@ class NonlinearController(Backend):
         self.oa = ObstacleAvoidance(env_dict, self.search_height)
 
         # Trajectory generation logic
-        self.tr = TrajectoryMinJerk(avg_vel=0.3) # average velocity [m/s] (< surge distance !!!)
+        self.tr = TrajectoryMinJerk(avg_vel=0.2) # average velocity [m/s] (< surge distance !!!)
 
         # GSL algorithm
-        self.gsl = E_Coli(surge_distance= 0.5, env_bounds=env_size, env_bound_sep=0.5)
+        self.gsl = E_Coli(surge_distance= 1.0, env_bounds=env_size, env_bound_sep=0.0)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
