@@ -43,13 +43,13 @@ class Anemometer(Sensor):
         super().__init__(sensor_type="Anemometer", update_rate=config.get("update_rate", 4.0))
         
         # Location of the wind data
-        self._AutoGDM2_dir = config.get("AutoGDM2_dir", "/home/user/AutoGDM2/")
-        self._env_name = config.get("env_name", "wh_empty_0000")
+        self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
+        self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
         self._wind_data_file = f"{self._AutoGDM2_dir}environments/wind_data/{self._env_name}.npy"
         self._wind_data = np.load(self._wind_data_file)
 
         # Environment specification
-        self._env_spec = config.get("env_spec", {"env_min": [0.0, 0.0, 0.0],
+        self._env_spec = config["env_dict"].get("env_spec", {"env_min": [0.0, 0.0, 0.0],
                                                  "env_max": [10.0, 10.0, 10.0,],
                                                  "num_cells": [100.0, 100.0, 100.0],
                                                  "cell_size": 0.1})

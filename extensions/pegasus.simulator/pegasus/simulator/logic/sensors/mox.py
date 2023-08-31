@@ -37,10 +37,7 @@ class MOX(Sensor):
         Examples:
             The dictionary default parameters are
 
-            >>> {"AutoGDM2_dir": '/home/user/AutoGDM2/',
-                 "env_name": 'wh_empty_0000',
-                 "env_id": 0000,
-                 "env_spec": {"env_min": [0.0, 0.0, 0.0],..., "cell_size": 0.1},
+            >>> {"env_dict": {}       # dict with environment info
                  "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
@@ -53,8 +50,8 @@ class MOX(Sensor):
         
         # TODO - put all filament iterations into one array
         # Location of the gas data
-        self._AutoGDM2_dir = config.get("AutoGDM2_dir", "/home/user/AutoGDM2/")
-        self._env_name = config.get("env_name", "wh_empty_0000")
+        self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
+        self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
         self._gas_data_dir = f"{self._AutoGDM2_dir}environments/gas_data/{self._env_name}/"
         self._gas_data_files = os.listdir(self._gas_data_dir)
         

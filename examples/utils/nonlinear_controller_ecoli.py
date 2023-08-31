@@ -15,6 +15,7 @@ import carb
 # Imports from the Pegasus library
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.backends import Backend
+from pegasus.simulator.logic.trajectory import Waypoints
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
 from pegasus.simulator.logic.gsl.ecoli import E_Coli
 
@@ -70,38 +71,28 @@ class NonlinearController(Backend):
         self.m = 1.50        # Mass in Kg
         self.g = 9.81        # The gravity acceleration ms^-2
 
-        # TODO move most of these variables to trajectory class
-        # Waypoint logic
-        self.tr = TrajectoryMinJerk()
-        self.avg_vel = 0.3 # average velocity [m/s] (< surge distance !!!)
+        # Controller related parameters
+        self.hold_time = 3.0 # [s]
+        self.search_height = 6.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
-        self.hold_time = 3.0 # [s]
-        self.waypoint_idx = 0
-        self.waypoints = np.array([[self.init_pos, # px, py, pz
-                                    [0.0,0.0,0.0],  # vx, vy, vz
-                                    [0.0,0.0,0.0]], # ax, ay, az
-                                   [[self.init_pos[0],self.init_pos[1],6.0], # TODO - make search height a parameter for E. Coli algorithm
-                                    [0.0,0.0,0.0],
-                                    [0.0,0.0,0.0]]])#,
-                                #    [[7.0,3.0,3.0],
-                                #     [0.0,0.0,0.0],
-                                #     [0.0,0.0,0.0]]])#
-                                #    [[7.5,9.0,3.0],
-                                #     [0.0,0.0,0.0],
-                                #     [0.0,0.0,0.0]],
-                                #    [[3.0,9.0,3.0],
-                                #     [0.0,0.0,0.0],
-                                #     [0.0,0.0,0.0]]])
-        self.waypoint_last = np.shape(self.waypoints)[0] - 1
-        self.waypoint_loop_idx = 1 # at last waypoint, loop back to this one
+
+        # Waypoints 
+        self.waypoints = Waypoints(init_pos, self.search_height)
+        self.takeoff = self.waypoints.set_takeoff()
+
+        # Trajectory generation logic
+        self.tr = TrajectoryMinJerk(avg_vel=0.3) # average velocity [m/s] (< surge distance !!!)
+
+        # GSL algorithm
+        self.gsl = E_Coli(surge_distance= 0.5, env_bounds=env_size, env_bound_sep=0.5)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
-        self.trajectory[0, 0:3] = np.array([self.waypoints[0,0,:]])
-        self.trajectory[0, 3:6] = np.array([self.waypoints[0,1,:]])
-        self.trajectory[0, 6:9] = np.array([self.waypoints[0,2,:]])
+        self.trajectory[0, 0:3] = np.array([self.takeoff[0,0,:]])
+        self.trajectory[0, 3:6] = np.array([self.takeoff[0,1,:]])
+        self.trajectory[0, 6:9] = np.array([self.takeoff[0,2,:]])
         
         self.index = 0
         self.max_index = 0
@@ -111,11 +102,6 @@ class NonlinearController(Backend):
         self.mox_raw = 0.0
         self.gas_conc = 0.0
         self.RS_R0 = 0.0
-
-        # GSL algorithm
-        self.gsl = E_Coli(surge_distance= 0.5,
-                            env_bounds=env_size,
-                            env_bound_sep=0.5)
 
         # Auxiliar variable, so that we only start sending motor commands once we get the state of the vehicle
         self.received_first_state = False
@@ -157,10 +143,11 @@ class NonlinearController(Backend):
             np.savez(self.results_files, **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
     
-        self.reset_statistics()
-        self.reset_waypoints()
         self.gsl.reset()
-        self.p = self.init_pos # reset position
+        self.waypoints.reset()
+
+        self.reset_statistics()
+        self.reset_controller()
 
 
     def update_sensor(self, sensor_type: str, data):
@@ -234,23 +221,23 @@ class NonlinearController(Backend):
             self.sensor_reading = self.mox_raw # set current sensor reading
 
             # first follow waypoint(s) in init(), then perform GSL
-            if self.waypoint_idx < self.waypoint_last:
-                self.start_wp = self.waypoints[self.waypoint_idx]
-                self.end_wp = self.waypoints[self.waypoint_idx + 1]
+            if self.waypoints.idx < self.waypoints.last_idx(): # TODO - Have a good look at this!
+                self.start_wp = self.takeoff[self.waypoints.idx]
+                self.end_wp = self.takeoff[self.waypoints.idx + 1]
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
 
-            self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp, self.avg_vel)
+            self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 
             # reset index and max_index
             self.index = 0
             self.max_index = np.shape(self.trajectory)[0] - 1
 
             # self.sensor_reading_prev = self.sensor_reading # set previous reading to current for next iteration
-            self.waypoint_idx += 1 # update waypoint index
+            self.waypoints.idx += 1 # update waypoint index
             
-            carb.log_warn(f"Moving to waypoint {self.waypoint_idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
+            carb.log_warn(f"Moving to waypoint {self.waypoints.idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
 
         # Check if we need to update to the next trajectory index
         if self.index < self.max_index - 1: #and self.total_time >= self.trajectory[self.index + 1, 0]:
@@ -364,19 +351,17 @@ class NonlinearController(Backend):
         self.mox_raw_over_time = []
 
 
-    def reset_waypoints(self):
-        self.start_wp = np.zeros((3,3))
-        self.end_wp = np.zeros((3,3))
+    def reset_controller(self):
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
-        self.waypoint_idx = 0
 
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
-        self.trajectory[0, 0:3] = np.array([self.waypoints[0,0,:]])
-        self.trajectory[0, 3:6] = np.array([self.waypoints[0,1,:]])
-        self.trajectory[0, 6:9] = np.array([self.waypoints[0,2,:]])
+        self.trajectory[0, 0:3] = np.array([self.takeoff[0,0,:]])
+        self.trajectory[0, 3:6] = np.array([self.takeoff[0,1,:]])
+        self.trajectory[0, 6:9] = np.array([self.takeoff[0,2,:]])
         
         self.index = 0
         self.max_index = 0
         self.total_time = 0.0
+        self.p = self.init_pos # reset position

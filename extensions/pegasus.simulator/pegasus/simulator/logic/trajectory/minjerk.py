@@ -1,11 +1,22 @@
 """
+| File: minjerk.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
+| Description: Class that genereates a trajectory with minimal jerk
 """
+__all__ = ["TrajectoryMinJerk"]
+
 import numpy as np
 
-class TrajectoryMinJerk():
-    def generate(self, dt:float, start:np.ndarray, end:np.ndarray, vel:float=0.4) -> np.ndarray:
+
+class TrajectoryMinJerk:
+    """ Trajectory generation with minimal jerk
+    """
+    def __init__(self, avg_vel:float=0.4) -> None:
+        self._avg_vel = avg_vel
+
+
+    def generate(self, dt:float, start:np.ndarray, end:np.ndarray) -> np.ndarray:
         """
         Method that generates a linear trajectory based on a start and endpoint.
         Desired is zero velocity and acceleration at the start and endpoints.
@@ -32,7 +43,7 @@ class TrajectoryMinJerk():
         """
         if not np.array_equal(start, end): # only generate trajectory if waypoints are different
             # Endtime T due to the average speed vel:
-            T = np.linalg.norm(end[0,:] - start[0,:]) / vel
+            T = np.linalg.norm(end[0,:] - start[0,:]) / self._avg_vel
             xdata = np.linspace(0, T, int(T/dt))
 
             # Initialize the ref arrays

@@ -60,6 +60,13 @@ class PegasusApp:
         with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
             env_spec = yaml.safe_load(file)
 
+        # Combine environment info into env_dict
+        env_dict = {"AutoGDM2_dir": AutoGDM2_dir,
+                    "env_type": env_type,
+                    "env_id": env_id,
+                    "env_name": env_name,
+                    "env_spec": env_spec}
+
         # Acquire the timeline thatfwill be used to start/stop the simulation
         self.timeline = omni.timeline.get_timeline_interface()
 
@@ -81,21 +88,33 @@ class PegasusApp:
         init_pos_1 = [8.0, 5.0, 0.2]
 
         # Set sensor parameters
-        mox_config = {"AutoGDM2_dir": AutoGDM2_dir,
-                      "env_name": env_name,
-                      "env_id": env_id,
-                      "env_spec": env_spec, # env_min, env_max, num_cells, cell_size
+        # mox_config = {"AutoGDM2_dir": AutoGDM2_dir,
+        #               "env_name": env_name,
+        #               "env_id": env_id,
+        #               "env_spec": env_spec, # env_min, env_max, num_cells, cell_size
+        #               "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+        #               "update_rate": 4.0,  # [Hz] update rate of sensor
+        #               "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
+        #               "gas_data_start_iter": 300,  # start iteration
+        #               "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+        # anemo_config = {"AutoGDM2_dir": AutoGDM2_dir,
+        #                 "env_name": env_name,
+        #                 "env_id": env_id,
+        #                 "env_spec": env_spec,
+        #                 "update_rate": 4.0,  # [Hz] update rate of sensor
+        #                 "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
+        #                 "wind_data_start_iter": 0,  # start iteration
+        #                 "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+    
+        mox_config = {"env_dict": env_dict,
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "update_rate": 4.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                       "gas_data_start_iter": 300,  # start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
-        anemo_config = {"AutoGDM2_dir": AutoGDM2_dir,
-                        "env_name": env_name,
-                        "env_id": env_id,
-                        "env_spec": env_spec,
+        anemo_config = {"env_dict": env_dict,
                         "update_rate": 4.0,  # [Hz] update rate of sensor
-                        "wind_data_time_step": 1.0, # [s] time steps between wind data iterations (in seconds to match GADEN)
+                        "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
                         "wind_data_start_iter": 0,  # start iteration
                         "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         
