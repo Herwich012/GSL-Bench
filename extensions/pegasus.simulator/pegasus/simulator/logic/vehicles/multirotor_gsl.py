@@ -22,8 +22,7 @@ class MultirotorConfig:
     """
 
     def __init__(self,
-                 # Sensor config
-                 sensor_configs:dict={}
+                 sensor_configs:dict={} # sensor config
                  ):
         """
         Initialization of the MultirotorConfig class

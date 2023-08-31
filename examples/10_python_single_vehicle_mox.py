@@ -29,7 +29,7 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli import NonlinearController
+from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -49,7 +49,7 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-        # TODO init location of AutoGDM2 -> env specs, occ_grid, wind and gas data
+
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
         env_type = 'wh_simple'

@@ -22,8 +22,9 @@ class Waypoints:
         self._altitude = altitude
         self._waypoints = np.zeros((1,3,3))
 
-        # Auxiliary variable for the index
+        # Auxiliary variable for the waypoint index
         self.idx = 0
+
 
     def set_takeoff(self, pos:np.ndarray=None):
         if pos == None: 
@@ -54,4 +55,5 @@ class Waypoints:
     
 
     def reset(self):
+        self._waypoints = np.zeros((1,3,3))
         self.idx = 0
