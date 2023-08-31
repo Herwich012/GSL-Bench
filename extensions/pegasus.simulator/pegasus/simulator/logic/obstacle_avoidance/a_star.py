@@ -3,7 +3,7 @@ Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
 """
 import math
 from heapq import heappush, heappop
-from utils import dist2d
+from pegasus.simulator.logic.obstacle_avoidance.utils import dist2d
 
 
 def _get_movements_4n():

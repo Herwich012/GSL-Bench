@@ -93,22 +93,26 @@ def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) 
 
     idx = 0
     end_idx = len(corner_idx) - 1
-    short_idx = []
+    short_idx = [0]
 
     while idx < (end_idx - 1):
+        shortened = False
         check_idx = end_idx
-        short_idx.append(corner_idx[idx])
+
         while check_idx != (idx + 1):
             if check_env_for_obstacle2D(env_spec, grid,
                                       np.array([path_loc[corner_idx[idx]][0],path_loc[corner_idx[idx]][1]]),
                                       np.array([path_loc[corner_idx[check_idx]][0],path_loc[corner_idx[check_idx]][1]])):
                 short_idx.append(corner_idx[check_idx])
                 idx = check_idx - 1 # -1 because it will get iterated in the outer while loop
+                shortened = True
                 break
 
             check_idx -= 1
         
         idx += 1
+        if not shortened:
+            short_idx.append(corner_idx[idx])
     
     #short_idx.append(corner_idx[end_idx])
 
@@ -148,13 +152,13 @@ def find_path_corner_idx(path:list) -> list:
     return corner_idx
 
 
-def check_env_for_obstacle2D(env:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> bool:
+def check_env_for_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> bool:
     # start_pos = get_pos(start)[:-1] # [m]
     # end_pos = get_pos(end)[:-1] # [m]
     
     # dist = np.linalg.norm((start_pos,end_pos))
     dist = np.linalg.norm((start,end))
-    samples = math.ceil(dist/env["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
+    samples = math.ceil(dist/env_spec["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
 
     # x_points = np.linspace(start_pos[0], end_pos[0], samples)
     # y_points = np.linspace(start_pos[1], end_pos[1], samples)
@@ -162,10 +166,35 @@ def check_env_for_obstacle2D(env:dict, grid:np.ndarray, start:np.ndarray, end:np
     y_points = np.linspace(start[1], end[1], samples)
     
     for _,(x,y) in enumerate(zip(x_points,y_points)):
-        x_idx = math.floor((x - env["env_min"][0])/env["cell_size"])
-        y_idx = math.floor((y - env["env_min"][1])/env["cell_size"])
+        x_idx = math.floor((x - env_spec["env_min"][0])/env_spec["cell_size"])
+        y_idx = math.floor((y - env_spec["env_min"][1])/env_spec["cell_size"])
 
         if grid[y_idx, x_idx] != 0: return False
+
+    # Direct line of sight!
+    return True
+
+
+def outside_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> list:
+    # start_pos = get_pos(start)[:-1] # [m]
+    # end_pos = get_pos(end)[:-1] # [m]
+    
+    # dist = np.linalg.norm((start_pos,end_pos))
+    dist = np.linalg.norm((start,end))
+    samples = math.ceil(dist/env_spec["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
+
+    # x_points = np.linspace(start_pos[0], end_pos[0], samples)
+    # y_points = np.linspace(start_pos[1], end_pos[1], samples)
+    x_points = np.linspace(start[0], end[0], samples)
+    y_points = np.linspace(start[1], end[1], samples)
+    
+    check_path = []
+    for _,(x,y) in enumerate(zip(x_points,y_points)):
+        x_idx = math.floor((x - env_spec["env_min"][0])/env_spec["cell_size"])
+        y_idx = math.floor((y - env_spec["env_min"][1])/env_spec["cell_size"])
+
+        check_path.append((x,y))
+        if grid[y_idx, x_idx] != 0: return check_path
 
     # Direct line of sight!
     return True

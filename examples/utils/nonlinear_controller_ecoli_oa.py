@@ -16,6 +16,7 @@ import carb
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import Waypoints
+from pegasus.simulator.logic.obstacle_avoidance import ObstacleAvoidance
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
 from pegasus.simulator.logic.gsl.ecoli import E_Coli
 
@@ -36,6 +37,7 @@ class NonlinearController(Backend):
 
     def __init__(self,
         init_pos=np.zeros((3,)),
+        env_dict = {},
         env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
                   [np.inf,np.inf,np.inf]], # env max x y z
         save_interval=1.0, # [s]
@@ -80,7 +82,10 @@ class NonlinearController(Backend):
 
         # Waypoints
         self.waypoints = Waypoints(init_pos, self.search_height)
-        self.takeoff = self.waypoints.set_takeoff()
+        self.waypoints.set_takeoff()
+
+        # Obstacle avoidance
+        self.oa = ObstacleAvoidance(env_dict, self.search_height)
 
         # Trajectory generation logic
         self.tr = TrajectoryMinJerk(avg_vel=0.3) # average velocity [m/s] (< surge distance !!!)
@@ -90,9 +95,9 @@ class NonlinearController(Backend):
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
-        self.trajectory[0, 0:3] = np.array([self.takeoff[0,0,:]])
-        self.trajectory[0, 3:6] = np.array([self.takeoff[0,1,:]])
-        self.trajectory[0, 6:9] = np.array([self.takeoff[0,2,:]])
+        self.trajectory[0, 0:3] = np.array([self.waypoints.get()[0,0,:]])
+        self.trajectory[0, 3:6] = np.array([self.waypoints.get()[0,1,:]])
+        self.trajectory[0, 6:9] = np.array([self.waypoints.get()[0,2,:]])
         
         self.index = 0
         self.max_index = 0
@@ -220,13 +225,22 @@ class NonlinearController(Backend):
             self.hold_end_time = np.inf # set holdtime to infinite (until trajectory is completed)
             self.sensor_reading = self.mox_raw # set current sensor reading
 
-            # first follow waypoint(s) in init(), then perform GSL
-            if self.waypoints.idx < self.waypoints.last_idx(): # TODO - Have a good look at this!
-                self.start_wp = self.takeoff[self.waypoints.idx]
-                self.end_wp = self.takeoff[self.waypoints.idx + 1]
+            # follow waypoints if the last waypoint has not yet been reached
+            if self.waypoints.idx < self.waypoints.last_idx():
+                self.start_wp = self.waypoints.get()[self.waypoints.idx]
+                self.end_wp = self.waypoints.get()[self.waypoints.idx + 1]
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
+                
+                # check for obstacles
+                obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
+                if obstacle_check == 1: # path obstructed
+                    self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
+                    self.end_wp = self.waypoints.get()[1]
+                elif obstacle_check == 2: # end_wp in obstacle
+                    self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
+                    self.end_wp = self.waypoints.get()[1]
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 

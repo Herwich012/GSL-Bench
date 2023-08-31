@@ -126,6 +126,7 @@ class PegasusApp:
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
             init_pos=init_pos_1,
+            env_dict=env_dict,
             env_size=[[0.0, 0.0, 0.0], # env min x y z
                       [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],

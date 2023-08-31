@@ -2,10 +2,9 @@
 """
 Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
 """
-import numpy as np
-# import matplotlib.pyplot as plt
-# from utils import png_to_ogm
+__all__ = ["OccupancyGridMap"]
 
+import numpy as np
 
 class OccupancyGridMap:
     def __init__(self, data_array, cell_size, occupancy_threshold=0.8):

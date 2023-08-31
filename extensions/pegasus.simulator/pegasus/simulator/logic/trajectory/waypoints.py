@@ -26,6 +26,10 @@ class Waypoints:
         self.idx = 0
 
 
+    def get(self) -> np.ndarray:
+        return self._waypoints
+
+
     def set_takeoff(self, pos:np.ndarray=None):
         if pos == None: 
             takeoff_pos = self._init_pos
@@ -38,12 +42,11 @@ class Waypoints:
         self._waypoints[0,0,:] = takeoff_pos
         self._waypoints[1,0,:] = takeoff_pos
         self._waypoints[1,0,2] = takeoff_alt
-        
-        return self._waypoints
 
 
-    def set_mission(self):
-        pass
+    def set_mission(self, waypoints:np.ndarray) -> None:
+        self._waypoints = waypoints
+        self.idx = 1
 
 
     def set_landing(self):

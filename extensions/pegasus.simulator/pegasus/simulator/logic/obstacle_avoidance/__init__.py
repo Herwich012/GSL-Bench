@@ -3,7 +3,7 @@
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
 
-from .default import ObstacleAvoidance
+from .oa import ObstacleAvoidance
 from .a_star import *
 from .utils import *
-from .gridmap import *
+from .gridmap import OccupancyGridMap
