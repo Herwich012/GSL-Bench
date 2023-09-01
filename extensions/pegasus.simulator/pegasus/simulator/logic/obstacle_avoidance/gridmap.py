@@ -1,13 +1,13 @@
-
 """
 Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
 """
 __all__ = ["OccupancyGridMap"]
-
+import math
 import numpy as np
 
+# takes into account the env_min instead of assuming that the env_min is in the origin.
 class OccupancyGridMap:
-    def __init__(self, data_array, cell_size, occupancy_threshold=0.8):
+    def __init__(self, data_array, env_spec, occupancy_threshold=0.8):
         """
         Creates a grid map
         :param data_array: a 2D array with a value of occupancy per cell (values from 0 - 1)
@@ -17,9 +17,11 @@ class OccupancyGridMap:
         """
 
         self.data = data_array
+        self.env_spec = env_spec
         self.dim_cells = np.shape(data_array)[::-1]
-        self.dim_meters = (self.dim_cells[0] * cell_size, self.dim_cells[1] * cell_size)
-        self.cell_size = cell_size
+        self.dim_meters = (env_spec["env_max"][0]-env_spec["env_min"][0], 
+                           env_spec["env_max"][1]-env_spec["env_min"][1])
+        self.cell_size = env_spec["cell_size"]
         self.occupancy_threshold = occupancy_threshold
         # 2D array to mark visited nodes (in the beginning, no node has been visited)
         self.visited = np.zeros(self.dim_cells, dtype=np.float32)
@@ -170,8 +172,9 @@ class OccupancyGridMap:
         :param y: the point's y-coordinate in meters
         :return: the corresponding array indices as a (x, y) tuple
         """
-        x_index = int(round(x/self.cell_size))
-        y_index = int(round(y/self.cell_size))
+
+        x_index = math.floor((x - self.env_spec["env_min"][0])/self.env_spec["cell_size"])
+        y_index = math.floor((y - self.env_spec["env_min"][1])/self.env_spec["cell_size"])
 
         return x_index, y_index
 
@@ -182,28 +185,8 @@ class OccupancyGridMap:
         :param y_index: the point's y index
         :return: the corresponding point in meters as a (x, y) tuple
         """
-        x = x_index*self.cell_size
-        y = y_index*self.cell_size
+
+        x = (x_index*self.env_spec["cell_size"]) + self.env_spec["env_min"][0]
+        y = (y_index*self.env_spec["cell_size"]) + self.env_spec["env_min"][1]
 
         return x, y
-
-    # def plot(self, alpha=0.3, min_val=0, origin='lower'):
-    #     """
-    #     plot the grid map
-    #     """
-    #     plt.imshow(self.data, vmin=min_val, vmax=1, origin=origin, interpolation='none', alpha=alpha)
-    #     plt.draw()
-
-    # @staticmethod
-    # def from_png(filename, cell_size):
-    #     """
-    #     Create an OccupancyGridMap from a png image
-    #     :param filename: the image filename
-    #     :param cell_size: the image pixel size in meters
-    #     :return: the created OccupancyGridMap
-    #     """
-    #     ogm_data = png_to_ogm(filename, normalized=True)
-    #     ogm_data_arr = np.array(ogm_data)
-    #     ogm = OccupancyGridMap(ogm_data_arr, cell_size)
-
-    #     return ogm

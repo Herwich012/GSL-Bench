@@ -2,9 +2,7 @@
 Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
 """
 import math
-# import png
 import numpy as np
-# import matplotlib.pyplot as plt
 
 
 def dist2d(point1, point2):
@@ -23,57 +21,6 @@ def dist2d(point1, point2):
     return math.sqrt(dist2)
 
 
-# def png_to_ogm(filename, normalized=False, origin='lower'):
-#     """
-#     Convert a png image to occupancy data.
-#     :param filename: the image filename
-#     :param normalized: whether the data should be normalised, i.e. to be in value range [0, 1]
-#     :param origin:
-#     :return:
-#     """
-#     r = png.Reader(filename)
-#     img = r.read()
-#     img_data = list(img[2])
-
-#     out_img = []
-#     bitdepth = img[3]['bitdepth']
-
-#     for i in range(len(img_data)):
-
-#         out_img_row = []
-
-#         for j in range(len(img_data[0])):
-#             if j % img[3]['planes'] == 0:
-#                 if normalized:
-#                     out_img_row.append(img_data[i][j]*1.0/(2**bitdepth))
-#                 else:
-#                     out_img_row.append(img_data[i][j])
-
-#         out_img.append(out_img_row)
-
-#     if origin == 'lower':
-#         out_img.reverse()
-
-#     return out_img
-
-
-# def plot_path(path):
-#     start_x, start_y = path[0]
-#     goal_x, goal_y = path[-1]
-
-#     # plot path
-#     path_arr = np.array(path)
-#     plt.plot(path_arr[:, 0], path_arr[:, 1], 'y')
-
-#     # plot start point
-#     plt.plot(start_x, start_y, 'ro')
-
-#     # plot goal point
-#     plt.plot(goal_x, goal_y, 'go')
-
-#     #plt.show()
-
-
 def expand_boundaries(arr:np.ndarray, exp:float, cell_size:float) -> np.ndarray:
     arr_exp = np.copy(arr)
     exp_ops = math.ceil(exp/cell_size)
@@ -88,7 +35,7 @@ def expand_boundaries(arr:np.ndarray, exp:float, cell_size:float) -> np.ndarray:
     return arr_exp
 
 
-def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) -> np.ndarray:
+def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) -> list:
     corner_idx = find_path_corner_idx(path_idx)
 
     idx = 0
@@ -114,7 +61,8 @@ def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) 
         if not shortened:
             short_idx.append(corner_idx[idx])
     
-    #short_idx.append(corner_idx[end_idx])
+    if short_idx[-1] != corner_idx[-1]: # dirty fix in case last idx is not appended in while loops
+        short_idx.append(corner_idx[end_idx])
 
     return short_idx
                                       
@@ -153,15 +101,9 @@ def find_path_corner_idx(path:list) -> list:
 
 
 def check_env_for_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> bool:
-    # start_pos = get_pos(start)[:-1] # [m]
-    # end_pos = get_pos(end)[:-1] # [m]
-    
-    # dist = np.linalg.norm((start_pos,end_pos))
     dist = np.linalg.norm((start,end))
     samples = math.ceil(dist/env_spec["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
 
-    # x_points = np.linspace(start_pos[0], end_pos[0], samples)
-    # y_points = np.linspace(start_pos[1], end_pos[1], samples)
     x_points = np.linspace(start[0], end[0], samples)
     y_points = np.linspace(start[1], end[1], samples)
     
@@ -176,10 +118,6 @@ def check_env_for_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, e
 
 
 def outside_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> list:
-    # start_pos = get_pos(start)[:-1] # [m]
-    # end_pos = get_pos(end)[:-1] # [m]
-    
-    # dist = np.linalg.norm((start_pos,end_pos))
     dist = np.linalg.norm((start,end))
     samples = math.ceil(dist/env_spec["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
 
@@ -196,8 +134,7 @@ def outside_obstacle2D(env_spec:dict, grid:np.ndarray, start:np.ndarray, end:np.
         check_path.append((x,y))
         if grid[y_idx, x_idx] != 0: return check_path
 
-    # Direct line of sight!
-    return True
+    return check_path
 
 
 # def check_env_for_obstacle3D(env:dict, grid:np.ndarray, start:np.ndarray, end:np.ndarray) -> bool:
@@ -251,11 +188,3 @@ def get_pos(loc:np.ndarray) -> np.ndarray:
         return loc[0,:]
     else:
         return loc
-    
-
-# def occ_plot(occ_map, alpha=0.3, min_val=0, origin='lower'):
-#     """
-#     plot the grid map
-#     """
-#     plt.imshow(occ_map, vmin=min_val, vmax=1, origin=origin, interpolation='none', alpha=alpha)
-#     plt.draw()

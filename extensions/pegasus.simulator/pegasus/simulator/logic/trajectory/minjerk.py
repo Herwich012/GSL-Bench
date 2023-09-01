@@ -12,8 +12,17 @@ import numpy as np
 class TrajectoryMinJerk:
     """ Trajectory generation with minimal jerk
     """
-    def __init__(self, avg_vel:float=0.4) -> None:
-        self._avg_vel = avg_vel
+    def __init__(self, time2wp:float=None, avg_vel:float=None) -> None:
+        if time2wp == None and avg_vel == None:
+            self._mode = 'time2wp'
+            self._T = 5.0 # [s]
+        elif time2wp == None and avg_vel != None:
+            self._mode = 'avg_vel'
+            self._avg_vel = avg_vel # [m/s]
+        else:
+            self._mode = 'time2wp'
+            self._T = time2wp # [s]
+        
 
 
     def generate(self, dt:float, start:np.ndarray, end:np.ndarray) -> np.ndarray:
@@ -43,7 +52,11 @@ class TrajectoryMinJerk:
         """
         if not np.array_equal(start, end): # only generate trajectory if waypoints are different
             # Endtime T due to the average speed vel:
-            T = np.linalg.norm(end[0,:] - start[0,:]) / self._avg_vel
+            if self._mode == 'time2wp':
+                T = self._T
+            else:
+                T = np.linalg.norm(end[0,:] - start[0,:]) / self._avg_vel
+            
             xdata = np.linspace(0, T, int(T/dt))
 
             # Initialize the ref arrays

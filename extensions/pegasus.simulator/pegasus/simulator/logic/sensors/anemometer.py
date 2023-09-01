@@ -183,6 +183,11 @@ class Anemometer(Sensor):
         xx = math.ceil((loc[0]-self._env_spec["env_min"][0])/self._env_spec["cell_size"])
         yy = math.ceil((loc[1]-self._env_spec["env_min"][1])/self._env_spec["cell_size"])
         zz = math.ceil((loc[2]-self._env_spec["env_min"][2])/self._env_spec["cell_size"])
+        
+        if xx < 0 or yy < 0 or zz < 0 or xx >= self._env_spec["num_cells"][0] or \
+            yy >= self._env_spec["num_cells"][1] or zz >= self._env_spec["num_cells"][2]:
+            raise Exception('Point is outside map boundary')
+        
         return np.array([xx,yy,zz])
 
 
