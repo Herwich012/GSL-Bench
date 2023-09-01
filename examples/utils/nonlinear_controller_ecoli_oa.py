@@ -38,8 +38,6 @@ class NonlinearController(Backend):
     def __init__(self,
         init_pos=np.zeros((3,)),
         env_dict = {},
-        env_size=[[-np.inf,-np.inf,-np.inf], # env min x y z
-                  [np.inf,np.inf,np.inf]], # env max x y z
         save_interval=1.0, # [s]
         Kp=[10.0, 10.0, 10.0],
         Kd=[8.5, 8.5, 8.5],
@@ -75,25 +73,24 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 2.0 # [m]
+        self.search_height = 4.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
 
         # Waypoints
         self.waypoints = Waypoints(init_pos, self.search_height)
-        #self.waypoints.set_takeoff()
-        self.waypoints.set_testcase(None, to=(3.1,4.0))
+        self.waypoints.set_takeoff()
+        #self.waypoints.set_testcase(None, to=(3.1,4.0))
 
         # Obstacle avoidance
         self.oa = ObstacleAvoidance(env_dict, self.search_height)
 
         # Trajectory generation logic
-        # self.avg_vel = 0.3 # [m/s] average velocity (< surge distance !!!)
-        self.tr = TrajectoryMinJerk()
+        self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = E_Coli(surge_distance= 1.0, env_bounds=env_size, env_bound_sep=0.0)
+        self.gsl = E_Coli(env_dict, surge_distance= 2.0, env_bound_sep=0.2)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
@@ -231,37 +228,33 @@ class NonlinearController(Backend):
             if self.waypoints.idx < self.waypoints.last_idx:
                 self.start_wp = self.waypoints.get()[self.waypoints.idx]
                 self.end_wp = self.waypoints.get()[self.waypoints.idx + 1]
-                print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
-                # if np.linalg.norm((self.start_wp-self.end_wp)) < self.avg_vel:
-                #     self.end_wp = self.start_wp
-                #     print(f"dist < avg_vel -> end_wp set to start_wp")
+                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
 
-                # check for obstacles
-                obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
-                if obstacle_check == 1: # path obstructed
-                    self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
-                    self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
-                    print(self.waypoints.get())
-                elif obstacle_check == 2: # end_wp in obstacle
-                    self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
-                    self.end_wp = self.waypoints.get()[0]
-                    print(self.waypoints.get())
+                # # check for obstacles
+                # obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
+                # if obstacle_check == 1: # path obstructed
+                #     self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
+                #     self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
+                #     print(self.waypoints.get())
+                # elif obstacle_check == 2: # end_wp in obstacle
+                #     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
+                #     self.end_wp = self.waypoints.get()[0]
+                #     print(self.waypoints.get())
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
 
-                print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
+                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
                 
                 # check for obstacles
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
                 if obstacle_check == 1: # path obstructed
                     self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
                     self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
-                    print(self.waypoints.get())
                 elif obstacle_check == 2: # end_wp in obstacle
                     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
                     self.end_wp = self.waypoints.get()[0]
-                    print(self.waypoints.get())
+
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 

@@ -109,8 +109,6 @@ class PegasusApp:
         self.controller = NonlinearController(
             init_pos=init_pos_1,
             env_dict=env_dict,
-            env_size=[[0.0, 0.0, 0.0], # env min x y z
-                      [10.0, 16.0, 8.0]], # env max x y z
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
@@ -151,8 +149,8 @@ class PegasusApp:
             # Start the simulation
             self.timeline.play()
 
-            while True: #not self.stop_cond.get(time_current = self.controller.total_time,
-                                         #pos_current = self.controller.p):
+            while not self.stop_cond.get(time_current = self.controller.total_time,
+                                         pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
 

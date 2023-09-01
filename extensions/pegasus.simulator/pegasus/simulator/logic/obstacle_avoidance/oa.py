@@ -48,7 +48,7 @@ class ObstacleAvoidance:
 
 
     def check_for_obstacle(self, start_wp:np.ndarray, end_wp:np.ndarray) -> int: # 0: no obstacle, 1: path obstructed, 2: in obstacle
-        # TODO - add possibility for wp to be outside of env
+        # TODO - add possibility for wp to be outside of env -> for now handled by the GSL algorithm
         end_2D = start_wp[0,:2] # reverse waypoints to start evaluating from the end_wp
         start_2D = end_wp[0,:2]
         
@@ -73,23 +73,29 @@ class ObstacleAvoidance:
 
         # run A*
         path, path_cells = a_star(start_2D, end_2D, self._gmap, movement='4N')
-        print(f"path: {path}")
-        print(f"path_cells: {path_cells}")
+        # print(f"path: {path}")
+        # print(f"path_cells: {path_cells}")
         
-        # get the idx of only the necessary points in the path
-        shortcut_idx = shortcut_path(self._env_spec, self._occ_data, path, path_cells)
-        print(f"shortcut_idx: {shortcut_idx}")
+        if path: # dirty fix in case a_star returns nothing because the path is clear?
+            # get the idx of only the necessary points in the path
+            shortcut_idx = shortcut_path(self._env_spec, self._occ_data, path, path_cells)
+            # print(f"shortcut_idx: {shortcut_idx}")
 
-        # make waypoints
-        waypoints = np.zeros((len(shortcut_idx),3,3)) 
-        for i,idx in enumerate(shortcut_idx):
-            waypoints[i,0,:] = np.array([path[idx][0], path[idx][1], start_wp[0,2]])
+            # make waypoints
+            waypoints = np.zeros((len(shortcut_idx),3,3)) 
+            for i,idx in enumerate(shortcut_idx):
+                waypoints[i,0,:] = np.array([path[idx][0], path[idx][1], start_wp[0,2]])
+        else:
+            waypoints = np.zeros((1,3,3))
+            waypoints[0] = end_wp
 
-        print(waypoints)
         return waypoints        
 
 
     def get_outside_wp(self, start_wp:np.ndarray, end_wp:np.ndarray) -> np.ndarray:
+        """
+        Get a waypoint just outside of an obstacle
+        """
         carb.log_warn("Waypoint in obstacle, going to closest point...")
         start_2D = start_wp[0,:2] 
         end_2D = end_wp[0,:2]

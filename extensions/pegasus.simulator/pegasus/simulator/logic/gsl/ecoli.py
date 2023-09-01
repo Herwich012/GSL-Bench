@@ -11,6 +11,7 @@ from pegasus.simulator.logic.gsl import GSL
 
 class E_Coli(GSL):
     def __init__(self,
+                 env_dict:dict = {},
                  surge_distance:float = 0.5,
                  env_bound_sep:float = 0.5, # [m] min distance from environment bounds
                  env_bounds:list = [[0,0,0],[10,10,10]]) -> None:
@@ -18,14 +19,15 @@ class E_Coli(GSL):
         # Initialize the Super class "object" attributes
         super().__init__(gsl_type="E_Coli")
         
+        self.env_spec = env_dict["env_spec"]
         self.surge_dist = surge_distance
         self.env_bounds_sep = env_bound_sep
-        self.ecoli_bounds = [[env_bounds[0][0] + self.env_bounds_sep + self.surge_dist, # min X
-                            env_bounds[0][1] + self.env_bounds_sep + self.surge_dist, # min Y
-                            env_bounds[0][2] + self.env_bounds_sep + self.surge_dist], # min Z
-                           [env_bounds[1][0] - self.env_bounds_sep - self.surge_dist, # max X
-                            env_bounds[1][1] - self.env_bounds_sep - self.surge_dist, # max Y
-                            env_bounds[1][2] - self.env_bounds_sep - self.surge_dist]] # max Z
+        self.ecoli_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
+                              self.env_spec["env_min"][1] + self.env_bounds_sep, # min Y
+                              self.env_spec["env_min"][2] + self.env_bounds_sep], # min Z
+                              [self.env_spec["env_max"][0] + self.env_bounds_sep, # max X
+                              self.env_spec["env_max"][1] + self.env_bounds_sep, # max Y
+                              self.env_spec["env_max"][2] + self.env_bounds_sep]] # max Z
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 
