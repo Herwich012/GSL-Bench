@@ -14,7 +14,9 @@ from pegasus.simulator.logic.gsl import GSL
 class DungBeetle(GSL):
     def __init__(self,
                  env_dict:dict = {},
-                 env_bound_sep:float = 0.5, # [m] min distance from environment bounds
+                 env_bound_sep:float = 1.0, # [m] min distance from environment bounds
+                 zigzag_angle:float = 60.0, # [deg] angle between windvector and path
+                 wp_dist:float = 0.8 # [m] distance of each next waypoint
                  ) -> None:
         
         # Initialize the Super class "object" attributes
@@ -30,9 +32,12 @@ class DungBeetle(GSL):
                               self.env_spec["env_max"][2] + self.env_bounds_sep]] # max Z
 
         self.states = ['90CCW', 'ZIG_CCW', 'ZAG_CW']
-        self.state = self.states[0] # set starting state
+        self.state = self.states[0] # starting state is movement perpendicular to the wind 
 
-        self.zigzag_angle = 60.0 # deg
+        self.zigzag_angle = zigzag_angle # deg
+        self.wp_dist = wp_dist
+        self.heading = 0.0 # [rad]
+
         self.gas_sensor_prev = 0.0
         self.loc_prev = np.zeros((3,3)) # previous location, to check if stuck
 
@@ -49,32 +54,48 @@ class DungBeetle(GSL):
             np.ndarray: A 3x3 numpy matrix with the next waypoint
         """ 
 
-        if self.state == '90CCW':
-            angle = self.get_90CCW(upwind_angle)
+        # determine state and angle
+        if gas_sensor >= self.gas_sensor_prev and self.state != self.states[0]: # reading gets worse, change zigzag direction
+            if self.state == self.states[1]:
+                self.state = self.states[2]
+                self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(self.zigzag_angle))
+                carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, changing zigzag direction...")
+            else:
+                self.state == self.states[1]
+                self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
+                carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, changing zigzag direction...")
+        elif gas_sensor < self.gas_sensor_prev and self.state == self.states[0]:
+            self.state = self.states[1]
+            self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
+            carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} < {'{:5.0f}'.format(self.gas_sensor_prev)}, initiating zigzag!")
+        elif self.state == self.states[0]:
+            self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(90))
+            carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, moving 90deg to the windangle...")
 
-        elif self.state == 'ZIG_CCW':
-            pass
 
-        else: # 'ZAG_CW'
-            pass
-            
-
+        # determine waypoint
         while True:
+            movement = np.array([[self.wp_dist*np.sin(self.heading), self.wp_dist*np.cos(self.heading), 0.0],
+                                [0.0, 0.0, 0.0],
+                                [0.0, 0.0, 0.0]])
 
-            wp = loc 
+            wp = loc + movement
 
             if self.check_in_env(wp): 
                 break
             else:
-                carb.log_warn(f"Waypoint outside environment! Randomizing heading again...")
-                wp = 2*np.pi*np.random.rand()
+                carb.log_warn(f"Waypoint outside environment! changing angle...")
+                # angle = (2*np.pi*np.random.rand()) - np.pi
+                if self.state == self.states[0]:
+                    self.heading = np.pi*(2*np.random.rand() - 1)
+                elif self.state == self.states[1]: # change direction
+                    self.heading = self.map_angle_to_pipi(self.heading + 2*np.deg2rad(self.zigzag_angle))
+                else: # change direction
+                    self.heading = self.map_angle_to_pipi(self.heading - 2*np.deg2rad(self.zigzag_angle))
+
 
         self.gas_sensor_prev = gas_sensor
         return wp
-
-
-    def get_angle(self, upwind_angle:float) -> float:
-        pass
 
 
     def map_angle_to_pipi(self, angle:float) -> float: # angle in [rad]!

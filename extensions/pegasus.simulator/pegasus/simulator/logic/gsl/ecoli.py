@@ -48,11 +48,11 @@ class E_Coli(GSL):
         while True:
             if sensor >= self.sensor_prev: # if reading is the same/gets worse, move randomly
                 surge_heading =  2*np.pi*np.random.rand()
-                carb.log_warn(f"Ecoli: {'{:5.0f}'.format(sensor)} >= {'{:5.0f}'.format(self.sensor_prev)}, RANDOM  heading: {'{:1.2f}'.format(surge_heading)}")
+                carb.log_warn(f"[E. Coli] {'{:5.0f}'.format(sensor)} >= {'{:5.0f}'.format(self.sensor_prev)}, RANDOM  heading: {'{:1.2f}'.format(surge_heading)}")
             else:
                 surge = True
                 surge_heading = self.surge_heading_prev
-                carb.log_warn(f"Ecoli: {'{:5.0f}'.format(sensor)} < {'{:5.0f}'.format(self.sensor_prev)}, SURGE!!! heading: {'{:1.2f}'.format(surge_heading)}")
+                carb.log_warn(f"[E. Coli] {'{:5.0f}'.format(sensor)} < {'{:5.0f}'.format(self.sensor_prev)}, SURGE!!! heading: {'{:1.2f}'.format(surge_heading)}")
 
             movement = np.array([[self.surge_dist*np.cos(surge_heading), self.surge_dist*np.sin(surge_heading), 0.0],
                                 [0.0, 0.0, 0.0],

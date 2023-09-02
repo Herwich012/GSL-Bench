@@ -73,7 +73,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 5.0 # [m]
+        self.search_height = 7.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -90,7 +90,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = DungBeetle(env_dict, surge_distance= 1.0, env_bound_sep=0.2)
+        self.gsl = DungBeetle(env_dict)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
@@ -101,6 +101,9 @@ class NonlinearController(Backend):
         self.index = 0
         self.max_index = 0
         self.total_time = 0.0
+
+        # Anemometer data initialization
+        self.upwind_angle = 0.0
 
         # MOX sensor data initialization
         self.mox_raw = 0.0
@@ -156,7 +159,7 @@ class NonlinearController(Backend):
 
     def update_sensor(self, sensor_type: str, data):
         """
-        Update the MOX sensor
+        Update the MOX sensor and anemometer
 
         Args:
             sensor_type (str): The name of the sensor providing the data
@@ -164,8 +167,19 @@ class NonlinearController(Backend):
         """
         if sensor_type == "MOX":
             self.update_mox_data(data)
+        if sensor_type == "Anemometer":
+            self.update_anemometer_data(data)
         else:
             pass
+
+
+    def update_anemometer_data(self, data):
+        """Gets called by the 'update_sensor' method to update the current anemometer data
+
+        Args:
+            data (dict): The data produced by an anemometer
+        """
+        self.upwind_angle = data["upwind_angle"] # only the upwind angle is required
 
 
     def update_mox_data(self, data):
@@ -222,7 +236,7 @@ class NonlinearController(Backend):
         if self.hold_end_time < self.total_time : # update trajectory when hold time is over
             self.task_state = self.task_states[1] # move2wp
             self.hold_end_time = np.inf # set holdtime to infinite (until trajectory is completed)
-            self.sensor_reading = self.mox_raw # set current sensor reading
+            # self.sensor_reading = self.mox_raw # set current sensor reading
 
             # follow waypoints if the last waypoint has not yet been reached
             if self.waypoints.idx < self.waypoints.last_idx:
@@ -242,7 +256,7 @@ class NonlinearController(Backend):
                 #     print(self.waypoints.get())
             else:
                 self.start_wp = self.end_wp
-                self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
+                self.end_wp = self.gsl.get_wp(self.start_wp, self.mox_raw, self.upwind_angle)
 
                 # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
                 

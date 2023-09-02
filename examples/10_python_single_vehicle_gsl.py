@@ -30,7 +30,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -87,7 +88,7 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
         # Set spawn position of the multirotor
-        init_pos_1 = [3.0, 4.0, 0.2]
+        init_pos_1 = [2.5, 14.0, 0.2]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -130,7 +131,7 @@ class PegasusApp:
         self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=120.0,
+        self.stop_cond = StopCondition(time=300.0,
                                        source_pos=np.array([5.0, 0.6, 2.0]), # TODO - read source_pos from settings
                                        distance2src=2.0)
         
