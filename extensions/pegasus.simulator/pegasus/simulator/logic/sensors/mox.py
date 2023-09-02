@@ -54,6 +54,15 @@ class MOX(Sensor):
         self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
         self._gas_data_dir = f"{self._AutoGDM2_dir}environments/gas_data/{self._env_name}/"
         self._gas_data_files = os.listdir(self._gas_data_dir)
+
+        # Environment specification
+        self._env_spec = config["env_dict"].get("env_spec", {"env_min": [0.0, 0.0, 0.0],
+                                                 "env_max": [10.0, 10.0, 10.0,],
+                                                 "num_cells": [50.0, 50.0, 50.0],
+                                                 "cell_size": 0.2})
+        
+        # Load occupancy grid
+        self._occ_grid = np.load(f"{self._AutoGDM2_dir}environments/occupancy/{self._env_name}_grid.npy") # occ data file)
         
         # Gas data selection (iterations)
         self._iter_start = config.get("gas_data_start_iter", 0)
@@ -77,12 +86,12 @@ class MOX(Sensor):
         # Set sensor model
         self._sensor_model = config.get("sensor_model", 0) # see mox_utils.py for sensor models
 
+        # Sensor outputs
         self._sensor_output = 0.0
         self._gas_conc = 0.0
         self._RS_R0 = 0.0
 
         self._first_reading = True
-
         self._time_tot = 0.0
 
         # Save the current state measured by the MOX sensor:
@@ -145,7 +154,8 @@ class MOX(Sensor):
                 #print(f"lim: {limit_distance}")
 
                 # If filament is within range, calculate the contribution to the gas concentration
-                if dist_SQR < math.pow(limit_distance,2): # TODO add check for obstacles
+                if dist_SQR < math.pow(limit_distance,2) and \
+                    self.check_env_for_obstacle3D(loc, np.array([filament.x, filament.y, filament.z])):
                     self._gas_conc += self.concentration_from_filament(loc, filament, gas_data_head)
 
         # Simulate MOX sensor response
@@ -238,3 +248,23 @@ class MOX(Sensor):
 
         # Return Sensor response for current time instant as the Sensor Resistance in Ohms
         return(sensor_output * R0[self._sensor_model]), RS_R0
+
+
+    def check_env_for_obstacle3D(self, start:np.ndarray, end:np.ndarray) -> bool:
+        dist = np.linalg.norm((start,end))
+        samples = math.ceil(dist/self._env_spec["cell_size"]) + 1 # +1 to avoid an edgecase of skipping cells
+
+        x_points = np.linspace(start[0], end[0], samples)
+        y_points = np.linspace(start[1], end[1], samples)
+        z_points = np.linspace(start[2], end[2], samples)
+        
+
+        for _,(x,y,z) in enumerate(zip(x_points,y_points,z_points)):
+            x_idx = math.floor((x - self._env_spec["env_min"][0])/self._env_spec["cell_size"])
+            y_idx = math.floor((y - self._env_spec["env_min"][1])/self._env_spec["cell_size"])
+            z_idx = math.floor((z - self._env_spec["env_min"][2])/self._env_spec["cell_size"])
+
+            if self._occ_grid[z_idx, x_idx, y_idx] != 0: return False
+
+        # Direct line of sight!
+        return True

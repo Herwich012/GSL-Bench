@@ -28,10 +28,7 @@ class Anemometer(Sensor):
         Examples:
             The dictionary default parameters are
 
-            >>> {"AutoGDM2_dir": '/home/user/AutoGDM2/',
-                 "env_name": 'wh_empty_0000',
-                 "env_id": 0000,
-                 "env_spec": {"env_min": [0.0, 0.0, 0.0],..., "cell_size": 0.1},
+            >>> {"env_dict": {}       # dict with environment info
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "wind_data_time_step": 1.0, # [s] time steps between wind data iterations (in seconds to match GADEN)
                  "wind_data_start_iter": 0,  # start iteration
@@ -51,8 +48,8 @@ class Anemometer(Sensor):
         # Environment specification
         self._env_spec = config["env_dict"].get("env_spec", {"env_min": [0.0, 0.0, 0.0],
                                                  "env_max": [10.0, 10.0, 10.0,],
-                                                 "num_cells": [100.0, 100.0, 100.0],
-                                                 "cell_size": 0.1})
+                                                 "num_cells": [50.0, 50.0, 50.0],
+                                                 "cell_size": 0.2})
         
         # Check for multiple windfields, if there is only one it will be used as steady state:
         if np.shape(self._wind_data)[0] == 1:

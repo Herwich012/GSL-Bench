@@ -73,7 +73,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 4.0 # [m]
+        self.search_height = 5.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -90,7 +90,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = E_Coli(env_dict, surge_distance= 2.0, env_bound_sep=0.2)
+        self.gsl = E_Coli(env_dict, surge_distance= 1.0, env_bound_sep=0.2)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
@@ -148,7 +148,7 @@ class NonlinearController(Backend):
             carb.log_warn("Statistics saved to: " + self.results_files)
     
         self.gsl.reset()
-        self.waypoints.reset()
+        self.waypoints.set_takeoff()
 
         self.reset_statistics()
         self.reset_controller()
@@ -382,7 +382,6 @@ class NonlinearController(Backend):
     def reset_controller(self):
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
-        self.waypoints.set_takeoff()
 
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))

@@ -7,6 +7,7 @@
 """
 import yaml
 import numpy as np
+from datetime import datetime
 
 # Imports to start Isaac Sim from this script
 import carb
@@ -168,12 +169,15 @@ class PegasusApp:
 
 
 def main():
-
+    start_time = datetime.now()
     # Instantiate the template app
     pg_app = PegasusApp()
 
     # Run the application loop
     pg_app.run()
+
+    # Print time elapsed
+    print(f"Finished in {datetime.now() - start_time}")
 
 
 if __name__ == "__main__":
