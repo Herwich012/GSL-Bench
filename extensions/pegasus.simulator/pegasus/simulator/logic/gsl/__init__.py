@@ -6,3 +6,4 @@
 from .gsl import GSL
 from .stop_conditions import StopCondition
 from .ecoli import E_Coli
+from .dungbeetle import DungBeetle

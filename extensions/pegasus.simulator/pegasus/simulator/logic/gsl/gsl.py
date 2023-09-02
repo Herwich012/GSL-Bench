@@ -1,4 +1,5 @@
 """
+| File: gsl.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: Definition of the GSL (Gas Source Localisation) class which is used as
@@ -25,8 +26,9 @@ class GSL:
         self._gsl_type = gsl_type
 
 
-    def get_wp(self) -> np.ndarray: # (get waypoint)
-        """Method that should be implemented by the class that inherits GSL method. 
+    def get_wp(self) -> np.ndarray:
+        """
+        Method that should be implemented by the class that inherits GSL method. 
         This is where the actual GSL algorithm is performed
         
         Args:

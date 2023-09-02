@@ -1,4 +1,5 @@
 """
+| File: ecoli.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
@@ -13,8 +14,8 @@ class E_Coli(GSL):
     def __init__(self,
                  env_dict:dict = {},
                  surge_distance:float = 0.5,
-                 env_bound_sep:float = 0.5, # [m] min distance from environment bounds
-                 env_bounds:list = [[0,0,0],[10,10,10]]) -> None:
+                 env_bound_sep:float = 0.3, # [m] min distance from environment bounds
+                ) -> None:
         
         # Initialize the Super class "object" attributes
         super().__init__(gsl_type="E_Coli")
@@ -22,7 +23,7 @@ class E_Coli(GSL):
         self.env_spec = env_dict["env_spec"]
         self.surge_dist = surge_distance
         self.env_bounds_sep = env_bound_sep
-        self.ecoli_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
+        self.env_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
                               self.env_spec["env_min"][1] + self.env_bounds_sep, # min Y
                               self.env_spec["env_min"][2] + self.env_bounds_sep], # min Z
                               [self.env_spec["env_max"][0] + self.env_bounds_sep, # max X
@@ -32,16 +33,13 @@ class E_Coli(GSL):
         self.surge_heading_prev = 0.0 # [rad]
 
 
-    def get_wp(self, start:np.ndarray, sensor:float):
+    def get_wp(self, start:np.ndarray, sensor:float) -> np.ndarray:
         """
         Method that generates a new waypoint according to the 'ecoli' algorithm
         
         Args:
             start (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
-            sensor_now (float): current sensor reading [ohms]
-            sensor_prev (float): previous sensor reading [ohms]
-            surge_vector_prev (float): previous surge vector [rad]
-            surge_distance (float): surge distance [m]
+            sensor (float): current sensor reading [ohms]
         Returns:
             np.ndarray: A 3x3 numpy matrix with the next waypoint
         """ 
@@ -65,10 +63,10 @@ class E_Coli(GSL):
             if self.check_in_env(wp): 
                 break
             elif surge == True:
-                carb.log_warn(f"Encountered obstacle! Randomizing previous surge heading...")
-                self.surge_heading_prev = 2*np.pi*np.random.rand() # update previous surge heading if it would move into an obstacle
+                carb.log_warn(f"Waypoint outside environment! Randomizing previous surge heading...")
+                self.surge_heading_prev = 2*np.pi*np.random.rand() # update previous surge heading if it 
             else:
-                carb.log_warn(f"Encountered obstacle! Randomizing heading again...")
+                carb.log_warn(f"Waypoint outside environment! Randomizing heading again...")
                 surge_heading = 2*np.pi*np.random.rand()
 
         self.sensor_prev = sensor
@@ -88,11 +86,10 @@ class E_Coli(GSL):
         
         Args:
             wp (np.ndarray): 3x3 numpy array with the start loc, vel, and accel
-            env (list): a [2,3] size list with the environment min and max bounds
         Returns:
             bool: True if waypoint is in environment
         """
-        env = self.ecoli_bounds
+        env = self.env_bounds
         if wp[0,0] < env[0][0] or wp[0,1] < env[0][1] or wp[0,2] < env[0][2] or \
             wp[0,0] > env[1][0] or wp[0,1] > env[1][1] or wp[0,2] > env[1][2]:
             return False

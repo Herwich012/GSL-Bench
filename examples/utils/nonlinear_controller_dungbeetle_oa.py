@@ -18,7 +18,7 @@ from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import Waypoints
 from pegasus.simulator.logic.obstacle_avoidance import ObstacleAvoidance
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
-from pegasus.simulator.logic.gsl.ecoli import E_Coli
+from pegasus.simulator.logic.gsl.dungbeetle import DungBeetle
 
 # Auxiliary scipy
 from scipy.spatial.transform import Rotation
@@ -90,7 +90,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = E_Coli(env_dict, surge_distance= 1.0)
+        self.gsl = DungBeetle(env_dict, surge_distance= 1.0, env_bound_sep=0.2)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
