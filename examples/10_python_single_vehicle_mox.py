@@ -50,7 +50,8 @@ class PegasusApp:
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
-
+        self.start_time = datetime.now() # For timing the runs afterwards
+        
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
         env_type = 'wh_simple'
@@ -141,7 +142,7 @@ class PegasusApp:
         """
         Method that implements the application main loop, where the physics steps are executed.
         """
-
+        
         # Run the simulation again for every statistics file
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
@@ -165,19 +166,16 @@ class PegasusApp:
         
         # Cleanup and quit
         carb.log_warn("PegasusApp Simulation App is closing.")
+        carb.log_warn(f"Finished in {datetime.now() - self.start_time}")
         simulation_app.close()
 
 
 def main():
-    start_time = datetime.now()
     # Instantiate the template app
     pg_app = PegasusApp()
 
     # Run the application loop
     pg_app.run()
-
-    # Print time elapsed
-    print(f"Finished in {datetime.now() - start_time}")
 
 
 if __name__ == "__main__":
