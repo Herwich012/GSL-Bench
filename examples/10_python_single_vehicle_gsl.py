@@ -16,7 +16,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": False})
+simulation_app = SimulationApp({"headless": True})
 
 # -----------------------------------
 # The actual script should start here
@@ -128,7 +128,7 @@ class PegasusApp:
 
         # Auxiliar variable for repeated runs
         self.runs = 3
-        self.statistics = [f"ecoli_run_{i}" for i in range(self.runs)]
+        self.statistics = [f"dungbeetle_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=180.0,
@@ -155,7 +155,7 @@ class PegasusApp:
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=True)
+                self.world.step(render=False)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller.run_success[0] = True

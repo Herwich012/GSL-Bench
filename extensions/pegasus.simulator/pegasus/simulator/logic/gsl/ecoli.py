@@ -26,9 +26,9 @@ class E_Coli(GSL):
         self.env_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
                               self.env_spec["env_min"][1] + self.env_bounds_sep, # min Y
                               self.env_spec["env_min"][2] + self.env_bounds_sep], # min Z
-                              [self.env_spec["env_max"][0] + self.env_bounds_sep, # max X
-                              self.env_spec["env_max"][1] + self.env_bounds_sep, # max Y
-                              self.env_spec["env_max"][2] + self.env_bounds_sep]] # max Z
+                              [self.env_spec["env_max"][0] - self.env_bounds_sep, # max X
+                              self.env_spec["env_max"][1] - self.env_bounds_sep, # max Y
+                              self.env_spec["env_max"][2] - self.env_bounds_sep]] # max Z
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 

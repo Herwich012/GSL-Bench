@@ -27,9 +27,9 @@ class DungBeetle(GSL):
         self.env_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
                               self.env_spec["env_min"][1] + self.env_bounds_sep, # min Y
                               self.env_spec["env_min"][2] + self.env_bounds_sep], # min Z
-                              [self.env_spec["env_max"][0] + self.env_bounds_sep, # max X
-                              self.env_spec["env_max"][1] + self.env_bounds_sep, # max Y
-                              self.env_spec["env_max"][2] + self.env_bounds_sep]] # max Z
+                              [self.env_spec["env_max"][0] - self.env_bounds_sep, # max X
+                              self.env_spec["env_max"][1] - self.env_bounds_sep, # max Y
+                              self.env_spec["env_max"][2] - self.env_bounds_sep]] # max Z
 
         self.states = ['90CCW', 'ZIG_CCW', 'ZAG_CW']
         self.state = self.states[0] # starting state is movement perpendicular to the wind 
@@ -105,6 +105,7 @@ class DungBeetle(GSL):
 
 
     def reset(self):
+        self.state = self.states[0] # starting state is movement perpendicular to the wind 
         self.heading = 0.0 # [rad]
         self.gas_sensor_prev = 0.0
 
