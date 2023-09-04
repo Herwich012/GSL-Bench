@@ -92,7 +92,7 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,        # draw the filaments
+                      "draw": False,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "update_rate": 4.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
@@ -129,7 +129,7 @@ class PegasusApp:
 
         # Auxiliar variable for repeated runs
         self.runs = 3
-        self.statistics = [f"dungbeetle_run_{i}" for i in range(self.runs)]
+        self.statistics = [f"pso_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=180.0,
