@@ -136,6 +136,9 @@ class PegasusApp:
                                        source_pos=np.array([5.0, 0.75, 5.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=2.0)
         
+        # Set the camera to a nice position so that we can see the environment
+        self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
+        
         # Reset the simulation environment so that all articulations (aka robots) are initialized
         self.world.reset()
 

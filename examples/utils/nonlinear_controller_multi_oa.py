@@ -125,7 +125,7 @@ class NonlinearController(Backend):
         self.position_over_time = []
         self.gas_conc_over_time = []
         self.mox_raw_over_time = []
-        self.wind_angle_over_time = []
+        # self.wind_angle_over_time = []
 
 
     def start(self):
@@ -151,7 +151,7 @@ class NonlinearController(Backend):
             statistics["p"] = np.vstack(self.position_over_time[1:])
             statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
             statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
-            statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
+            #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
             np.savez(self.results_files, **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
     
@@ -172,8 +172,8 @@ class NonlinearController(Backend):
         """
         if sensor_type == "MOX":
             self.update_mox_data(data)
-        if sensor_type == "Anemometer":
-            self.update_anemometer_data(data)
+        # if sensor_type == "Anemometer":
+        #     self.update_anemometer_data(data)
         else:
             pass
 
@@ -249,7 +249,8 @@ class NonlinearController(Backend):
                 self.end_wp = self.waypoints.get()[self.waypoints.idx + 1]
             else:
                 self.start_wp = self.end_wp
-                self.end_wp = self.gsl.get_wp(self.start_wp, self.mox_raw, self.upwind_angle)
+                self.end_wp = self.gsl.get_wp(self.vehicle_id, self.start_wp, self.mox_raw)
+                self.gsl.draw() # draw waypoints
                 
                 # check for obstacles
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
@@ -358,7 +359,7 @@ class NonlinearController(Backend):
             self.position_over_time.append(self.p)
             self.gas_conc_over_time.append(self.gas_conc)
             self.mox_raw_over_time.append(self.mox_raw)
-            self.wind_angle_over_time.append(self.upwind_angle)
+            #self.wind_angle_over_time.append(self.upwind_angle)
 
             # update save time
             self.save_time = self.total_time + self.save_interval
@@ -382,7 +383,7 @@ class NonlinearController(Backend):
         self.run_success = [False]
         self.gas_conc_over_time = []
         self.mox_raw_over_time = []
-        self.wind_angle_over_time = []
+        # self.wind_angle_over_time = []
 
 
     def reset_controller(self):

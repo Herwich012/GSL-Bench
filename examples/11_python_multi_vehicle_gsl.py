@@ -92,7 +92,7 @@ class PegasusApp:
         
         # Set spawn positions of the multirotors
         init_pos_1 = [2.5, 14.0, 0.2]
-        init_pos_2 = [7.5, 15.0, 0.2]
+        init_pos_2 = [7.5, 13.0, 0.2]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -111,7 +111,7 @@ class PegasusApp:
         sensor_configs = {'mox': mox_config,
                           'anemometer': anemo_config}
 
-        # Create multi vehicle algorithm instance 
+        # Create instance of multi vehicle algorithm 
         pso = PSO(env_dict, particles=2)
 
         # Create the vehicle 1
@@ -120,7 +120,7 @@ class PegasusApp:
         self.controller = NonlinearController(
             init_pos=init_pos_1,
             env_dict=env_dict,
-            algorithm=pso,
+            gsl=pso,
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
@@ -134,6 +134,30 @@ class PegasusApp:
             Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
             config=config_multirotor1,
         )
+
+        # Create the vehicle 2
+        # Try to spawn the selected robot in the world to the specified namespace
+        config_multirotor2 = MultirotorConfig(sensor_configs=sensor_configs)
+        self.controller = NonlinearController(
+            init_pos=init_pos_2,
+            env_dict=env_dict,
+            gsl=pso,
+            Ki=[0.5, 0.5, 0.5],
+            Kr=[2.0, 2.0, 2.0]
+        )
+        config_multirotor2.backends = [self.controller]
+
+        Multirotor(
+            "/World/quadrotor1",
+            ROBOTS['Iris'],
+            1,
+            init_pos_2,
+            Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
+            config=config_multirotor2,
+        )
+    
+        # Set the camera to a nice position so that we can see the environment
+        self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
 
         # Auxiliar variable for repeated runs
         self.runs = 3

@@ -23,12 +23,12 @@ class E_Coli(GSL):
         self.env_spec = env_dict["env_spec"]
         self.surge_dist = surge_distance
         self.env_bounds_sep = env_bound_sep
-        self.env_bounds = [[self.env_spec["env_min"][0] + self.env_bounds_sep, # min X
-                              self.env_spec["env_min"][1] + self.env_bounds_sep, # min Y
-                              self.env_spec["env_min"][2] + self.env_bounds_sep], # min Z
-                              [self.env_spec["env_max"][0] - self.env_bounds_sep, # max X
-                              self.env_spec["env_max"][1] - self.env_bounds_sep, # max Y
-                              self.env_spec["env_max"][2] - self.env_bounds_sep]] # max Z
+        self.env_bounds = np.array([[self.env_spec["env_min"][0] + self.env_bounds_sep,   # min X
+                                     self.env_spec["env_min"][1] + self.env_bounds_sep,   # min Y
+                                     self.env_spec["env_min"][2] + self.env_bounds_sep],  # min Z
+                                    [self.env_spec["env_max"][0] - self.env_bounds_sep,   # max X
+                                     self.env_spec["env_max"][1] - self.env_bounds_sep,   # max Y
+                                     self.env_spec["env_max"][2] - self.env_bounds_sep]]) # max Z
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 
@@ -90,8 +90,8 @@ class E_Coli(GSL):
             bool: True if waypoint is in environment
         """
         env = self.env_bounds
-        if wp[0,0] < env[0][0] or wp[0,1] < env[0][1] or wp[0,2] < env[0][2] or \
-            wp[0,0] > env[1][0] or wp[0,1] > env[1][1] or wp[0,2] > env[1][2]:
+        if wp[0,0] < env[0,0] or wp[0,1] < env[0,1] or wp[0,2] < env[0,2] or \
+            wp[0,0] > env[1,0] or wp[0,1] > env[1,1] or wp[0,2] > env[1,2]:
             return False
         else:
             return True
