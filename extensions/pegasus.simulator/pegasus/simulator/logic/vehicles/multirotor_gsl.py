@@ -99,7 +99,6 @@ class Multirotor(Vehicle):
         self._backends = config.backends
         for backend in self._backends:
             backend.initialize(self)
-            backend.vehicle_id = vehicle_id # set vehicle id in controller
 
         # Add a callbacks for the
         self._world.add_physics_callback(self._stage_prefix + "/mav_state", self.update_sim_state)

@@ -94,6 +94,7 @@ class NonlinearController(Backend):
 
         # GSL algorithm
         self.gsl = gsl
+        gsl.initialize(vehicle_id, init_pos)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
@@ -250,7 +251,6 @@ class NonlinearController(Backend):
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.vehicle_id, self.start_wp, self.mox_raw)
-                self.gsl.draw() # draw waypoints
                 
                 # check for obstacles
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)

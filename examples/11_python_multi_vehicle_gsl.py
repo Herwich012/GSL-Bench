@@ -36,7 +36,6 @@ from examples.utils.nonlinear_controller_multi_oa import NonlinearController
 from pegasus.simulator.logic.gsl.pso import PSO
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
-
 # Auxiliary scipy and numpy modules
 from scipy.spatial.transform import Rotation
 
@@ -112,15 +111,16 @@ class PegasusApp:
                           'anemometer': anemo_config}
 
         # Create instance of multi vehicle algorithm 
-        pso = PSO(env_dict, particles=2)
+        self.gsl = PSO(env_dict, particles=2)
 
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
+            vehicle_id=0,
             init_pos=init_pos_1,
             env_dict=env_dict,
-            gsl=pso,
+            gsl=self.gsl,
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
@@ -139,9 +139,10 @@ class PegasusApp:
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor2 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
+            vehicle_id=1,
             init_pos=init_pos_2,
             env_dict=env_dict,
-            gsl=pso,
+            gsl=self.gsl,
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
@@ -187,6 +188,7 @@ class PegasusApp:
 
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
+                
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
 
