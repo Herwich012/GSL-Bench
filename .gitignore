@@ -44,3 +44,4 @@ log/
 
 # Results
 /examples/results/ecoli*
+/examples/results/dungbeetle*

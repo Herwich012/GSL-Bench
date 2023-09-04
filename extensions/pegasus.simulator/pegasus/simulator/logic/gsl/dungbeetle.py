@@ -54,27 +54,27 @@ class DungBeetle(GSL):
             np.ndarray: A 3x3 numpy matrix with the next waypoint
         """ 
 
+        carb.log_warn(f"[DungBeetle] gas sensor now-prev: {'{:5.0f}'.format(gas_sensor)} - {'{:5.0f}'.format(self.gas_sensor_prev)}")
         # determine state and angle
         if gas_sensor >= self.gas_sensor_prev and self.state != self.states[0]: # reading gets worse, change zigzag direction
             if self.state == self.states[1]:
                 self.state = self.states[2]
                 self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(self.zigzag_angle))
-                carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, changing zigzag direction...")
+                carb.log_warn(f"[DungBeetle] changing zigzag direction to +{self.zigzag_angle}deg")
             else:
-                self.state == self.states[1]
+                self.state = self.states[1]
                 self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
-                carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, changing zigzag direction...")
+                carb.log_warn(f"[DungBeetle] changing zigzag direction to -{self.zigzag_angle}deg")
         elif gas_sensor < self.gas_sensor_prev and self.state == self.states[0]:
             self.state = self.states[1]
             self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
-            carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} < {'{:5.0f}'.format(self.gas_sensor_prev)}, initiating zigzag!")
+            carb.log_warn(f"[DungBeetle] initiating zigzag!")
         elif self.state == self.states[0]:
             self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(90))
-            carb.log_warn(f"[DungBeetle] {'{:5.0f}'.format(gas_sensor)} >= {'{:5.0f}'.format(self.gas_sensor_prev)}, moving 90deg to the windangle...")
+            carb.log_warn(f"[DungBeetle] moving 90deg to the windangle...")
 
-
-        # determine waypoint
         while True:
+            # determine waypoint
             movement = np.array([[self.wp_dist*np.sin(self.heading), self.wp_dist*np.cos(self.heading), 0.0],
                                 [0.0, 0.0, 0.0],
                                 [0.0, 0.0, 0.0]])
@@ -93,7 +93,6 @@ class DungBeetle(GSL):
                 else: # change direction
                     self.heading = self.map_angle_to_pipi(self.heading - 2*np.deg2rad(self.zigzag_angle))
 
-
         self.gas_sensor_prev = gas_sensor
         return wp
 
@@ -106,7 +105,8 @@ class DungBeetle(GSL):
 
 
     def reset(self):
-        self.sensor_prev = 0.0
+        self.heading = 0.0 # [rad]
+        self.gas_sensor_prev = 0.0
 
 
     def check_in_env(self, wp:np.ndarray):
