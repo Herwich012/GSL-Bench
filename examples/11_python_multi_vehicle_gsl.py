@@ -31,8 +31,11 @@ from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
 # from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController
+# from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController
+from examples.utils.nonlinear_controller_multi_oa import NonlinearController
+from pegasus.simulator.logic.gsl.pso import PSO
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
+
 
 # Auxiliary scipy and numpy modules
 from scipy.spatial.transform import Rotation
@@ -87,8 +90,9 @@ class PegasusApp:
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
-        # Set spawn position of the multirotor
+        # Set spawn positions of the multirotors
         init_pos_1 = [2.5, 14.0, 0.2]
+        init_pos_2 = [7.5, 15.0, 0.2]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -107,12 +111,16 @@ class PegasusApp:
         sensor_configs = {'mox': mox_config,
                           'anemometer': anemo_config}
 
+        # Create multi vehicle algorithm instance 
+        pso = PSO(env_dict, particles=2)
+
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
             init_pos=init_pos_1,
             env_dict=env_dict,
+            algorithm=pso,
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )

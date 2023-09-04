@@ -99,6 +99,7 @@ class Multirotor(Vehicle):
         self._backends = config.backends
         for backend in self._backends:
             backend.initialize(self)
+            backend.vehicle_id = vehicle_id # give vehicle id to controller
 
         # Add a callbacks for the
         self._world.add_physics_callback(self._stage_prefix + "/mav_state", self.update_sim_state)
@@ -148,7 +149,7 @@ class Multirotor(Vehicle):
         for backend in self._backends:
             backend.stop()
 
-        for sensor in self._sensors[-2:]:
+        for sensor in self._sensors[-2:]: # Stop MOX and Anemometer
             sensor.stop()
     
     def update(self, dt: float):

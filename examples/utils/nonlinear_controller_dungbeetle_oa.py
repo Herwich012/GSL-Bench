@@ -36,6 +36,7 @@ class NonlinearController(Backend):
     """
 
     def __init__(self,
+        vehicle_id = 0,
         init_pos=np.zeros((3,)),
         env_dict = {},
         save_interval=1.0, # [s]
@@ -45,7 +46,8 @@ class NonlinearController(Backend):
         Kr=[3.5, 3.5, 3.5],
         Kw=[0.5, 0.5, 0.5]):
 
-        # Initial position
+        # Vehicle ID and initial position
+        self.vehicle_id = vehicle_id
         self.init_pos = init_pos
 
         # The current rotor references [rad/s]

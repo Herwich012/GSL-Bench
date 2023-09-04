@@ -18,7 +18,7 @@ from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import Waypoints
 from pegasus.simulator.logic.obstacle_avoidance import ObstacleAvoidance
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
-from pegasus.simulator.logic.gsl.dungbeetle import DungBeetle
+from pegasus.simulator.logic.gsl.gsl import GSL
 
 # Auxiliary scipy
 from scipy.spatial.transform import Rotation
@@ -36,8 +36,10 @@ class NonlinearController(Backend):
     """
 
     def __init__(self,
+        vehicle_id = 0,
         init_pos=np.zeros((3,)),
         env_dict = {},
+        gsl:GSL= None,
         save_interval=1.0, # [s]
         Kp=[10.0, 10.0, 10.0],
         Kd=[8.5, 8.5, 8.5],
@@ -45,7 +47,8 @@ class NonlinearController(Backend):
         Kr=[3.5, 3.5, 3.5],
         Kw=[0.5, 0.5, 0.5]):
 
-        # Initial position
+        # Vehicle ID and initial position
+        self.vehicle_id = vehicle_id
         self.init_pos = init_pos
 
         # The current rotor references [rad/s]
@@ -90,7 +93,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = DungBeetle(env_dict) # TODO - move to main script
+        self.gsl = gsl
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
