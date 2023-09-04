@@ -6,6 +6,8 @@
 """
 __all__ = ["MOX"]
 
+from omni.isaac.debug_draw import _debug_draw # for plotting the filaments
+
 import os
 import re
 import math
@@ -38,6 +40,7 @@ class MOX(Sensor):
             The dictionary default parameters are
 
             >>> {"env_dict": {}       # dict with environment info
+                 "draw": False        # draw the filaments
                  "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
@@ -94,6 +97,11 @@ class MOX(Sensor):
         self._first_reading = True
         self._time_tot = 0.0
 
+        # Draw interface for drawing the filaments
+        self._draw_bool = config.get("draw", False)
+        if self._draw_bool:
+            self.draw = _debug_draw.acquire_debug_draw_interface()
+
         # Save the current state measured by the MOX sensor:
         self._state = {"sensor_output": np.zeros((3,))} # [sensor_output, gas_conc, RS_R0]
 
@@ -145,6 +153,16 @@ class MOX(Sensor):
         if self._update_iter == 0: # update concentration only if new gas data
         # TODO UPDATE GAS CONCENTRATION FOR EVERY PHYSICS STEP (because location can be changed)
         #print("Update!")
+            
+            # Draw filaments if required
+            if self._draw_bool:
+                self.draw.clear_points()
+                num_samples = np.shape(gas_data)[0]
+                point_list = [(gas_data[i][1],gas_data[i][2],gas_data[i][3]) for i in range(num_samples)]
+                colors = [(0, 1, 0, 0.5)] * num_samples
+                sizes = [(0.15*gas_data[i][4]) for i in range(num_samples)]
+                self.draw.draw_points(point_list, colors, sizes)
+
             self._gas_conc = 0.0
             for fil in gas_data: # filament: id, x, y, z, sigma
                 filament = Filament(fil[0],fil[1],fil[2],fil[3],fil[4])

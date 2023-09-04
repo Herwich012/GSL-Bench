@@ -73,7 +73,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 7.0 # [m]
+        self.search_height = 7.0 # [m] # TODO - move to main script
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -90,7 +90,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = DungBeetle(env_dict)
+        self.gsl = DungBeetle(env_dict) # TODO - move to main script
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
@@ -122,6 +122,7 @@ class NonlinearController(Backend):
         self.position_over_time = []
         self.gas_conc_over_time = []
         self.mox_raw_over_time = []
+        self.wind_angle_over_time = []
 
 
     def start(self):
@@ -147,6 +148,7 @@ class NonlinearController(Backend):
             statistics["p"] = np.vstack(self.position_over_time[1:])
             statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
             statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
+            statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
             np.savez(self.results_files, **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
     
@@ -242,23 +244,9 @@ class NonlinearController(Backend):
             if self.waypoints.idx < self.waypoints.last_idx:
                 self.start_wp = self.waypoints.get()[self.waypoints.idx]
                 self.end_wp = self.waypoints.get()[self.waypoints.idx + 1]
-                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
-
-                # # check for obstacles
-                # obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
-                # if obstacle_check == 1: # path obstructed
-                #     self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
-                #     self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
-                #     print(self.waypoints.get())
-                # elif obstacle_check == 2: # end_wp in obstacle
-                #     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
-                #     self.end_wp = self.waypoints.get()[0]
-                #     print(self.waypoints.get())
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.start_wp, self.mox_raw, self.upwind_angle)
-
-                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
                 
                 # check for obstacles
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
@@ -268,7 +256,6 @@ class NonlinearController(Backend):
                 elif obstacle_check == 2: # end_wp in obstacle
                     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
                     self.end_wp = self.waypoints.get()[0]
-
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 
@@ -368,6 +355,7 @@ class NonlinearController(Backend):
             self.position_over_time.append(self.p)
             self.gas_conc_over_time.append(self.gas_conc)
             self.mox_raw_over_time.append(self.mox_raw)
+            self.wind_angle_over_time.append(self.upwind_angle)
 
             # update save time
             self.save_time = self.total_time + self.save_interval
@@ -391,6 +379,7 @@ class NonlinearController(Backend):
         self.run_success = [False]
         self.gas_conc_over_time = []
         self.mox_raw_over_time = []
+        self.wind_angle_over_time = []
 
 
     def reset_controller(self):

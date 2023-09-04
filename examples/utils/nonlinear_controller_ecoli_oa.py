@@ -228,23 +228,10 @@ class NonlinearController(Backend):
             if self.waypoints.idx < self.waypoints.last_idx:
                 self.start_wp = self.waypoints.get()[self.waypoints.idx]
                 self.end_wp = self.waypoints.get()[self.waypoints.idx + 1]
-                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
 
-                # # check for obstacles
-                # obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
-                # if obstacle_check == 1: # path obstructed
-                #     self.waypoints.set_mission(self.oa.get_go_around_mission(self.start_wp, self.end_wp))
-                #     self.end_wp = self.waypoints.get()[1] # [1] because the waypoints include the startpoint
-                #     print(self.waypoints.get())
-                # elif obstacle_check == 2: # end_wp in obstacle
-                #     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
-                #     self.end_wp = self.waypoints.get()[0]
-                #     print(self.waypoints.get())
             else:
                 self.start_wp = self.end_wp
                 self.end_wp = self.gsl.get_wp(self.start_wp, self.sensor_reading)
-
-                # print(f"end_wp before obstacle check: {np.round(self.end_wp[0],2)}")
                 
                 # check for obstacles
                 obstacle_check = self.oa.check_for_obstacle(self.start_wp, self.end_wp)
@@ -254,7 +241,6 @@ class NonlinearController(Backend):
                 elif obstacle_check == 2: # end_wp in obstacle
                     self.waypoints.set_mission(self.oa.get_outside_wp(self.start_wp, self.end_wp))
                     self.end_wp = self.waypoints.get()[0]
-
 
             self.trajectory = self.tr.generate(dt, self.start_wp, self.end_wp)
 
