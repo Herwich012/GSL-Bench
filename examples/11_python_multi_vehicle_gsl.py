@@ -90,8 +90,9 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
         # Set spawn positions of the multirotors
-        init_pos_1 = [2.5, 14.0, 0.2]
-        init_pos_2 = [7.5, 13.0, 0.2]
+        init_pos_0 = [2.5, 14.0, 0.2]
+        init_pos_1 = [7.0, 10.0, 0.2]
+        init_pos_2 = [3.5, 6.0, 0.2]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -111,13 +112,35 @@ class PegasusApp:
                           'anemometer': anemo_config}
 
         # Create instance of multi vehicle algorithm 
-        self.gsl = PSO(env_dict, particles=2)
+        self.gsl = PSO(env_dict, particles=3)
+
+        # Create the vehicle 0
+        # Try to spawn the selected robot in the world to the specified namespace
+        config_multirotor0 = MultirotorConfig(sensor_configs=sensor_configs)
+        self.controller = NonlinearController(
+            vehicle_id=0,
+            init_pos=init_pos_0,
+            env_dict=env_dict,
+            gsl=self.gsl,
+            Ki=[0.5, 0.5, 0.5],
+            Kr=[2.0, 2.0, 2.0]
+        )
+        config_multirotor0.backends = [self.controller]
+
+        Multirotor(
+            "/World/quadrotor1",
+            ROBOTS['Iris'],
+            0,
+            init_pos_0,
+            Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
+            config=config_multirotor0,
+        )
 
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
-            vehicle_id=0,
+            vehicle_id=1,
             init_pos=init_pos_1,
             env_dict=env_dict,
             gsl=self.gsl,
@@ -129,7 +152,7 @@ class PegasusApp:
         Multirotor(
             "/World/quadrotor1",
             ROBOTS['Iris'],
-            0,
+            1,
             init_pos_1,
             Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
             config=config_multirotor1,
@@ -139,7 +162,7 @@ class PegasusApp:
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor2 = MultirotorConfig(sensor_configs=sensor_configs)
         self.controller = NonlinearController(
-            vehicle_id=1,
+            vehicle_id=2,
             init_pos=init_pos_2,
             env_dict=env_dict,
             gsl=self.gsl,
@@ -151,7 +174,7 @@ class PegasusApp:
         Multirotor(
             "/World/quadrotor1",
             ROBOTS['Iris'],
-            1,
+            2,
             init_pos_2,
             Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
             config=config_multirotor2,

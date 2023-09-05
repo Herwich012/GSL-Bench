@@ -75,8 +75,8 @@ class NonlinearController(Backend):
         self.g = 9.81        # The gravity acceleration ms^-2
 
         # Controller related parameters
-        self.hold_time = 2.0 # [s]
-        self.search_height = 7.0 # [m] # TODO - move to main script
+        self.hold_time = 0.2 # [s]
+        self.search_height = 7.5 # [m] # TODO - move to main script
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -153,7 +153,7 @@ class NonlinearController(Backend):
             statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
             statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
             #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
-            np.savez(self.results_files, **statistics)
+            np.savez(f"{self.results_files}_{self.vehicle_id}", **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
     
         self.gsl.reset()
@@ -270,7 +270,7 @@ class NonlinearController(Backend):
             # self.sensor_reading_prev = self.sensor_reading # set previous reading to current for next iteration
             self.waypoints.idx += 1 # update waypoint index
             
-            carb.log_warn(f"Moving to waypoint {self.waypoints.idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
+            carb.log_warn(f"{self.vehicle_id}: moving to waypoint {self.waypoints.idx} at {np.round(np.array(self.trajectory[self.max_index, 0:3]),2)}")
 
         # Check if we need to update to the next trajectory index
         if self.index < self.max_index - 1: #and self.total_time >= self.trajectory[self.index + 1, 0]:
@@ -278,7 +278,7 @@ class NonlinearController(Backend):
         elif self.task_state == 'move2wp': # if task_state is hold, do not update the trajectory
             self.task_state = self.task_states[0] # initiate the hold loop
             self.hold_end_time = self.total_time + self.hold_time
-            carb.log_warn(f"Holding for {self.hold_time} seconds...")
+            carb.log_warn(f"{self.vehicle_id}: holding for {self.hold_time} seconds...")
 
         # set references for current timestep
         p_ref = np.array(self.trajectory[self.index, 0:3])

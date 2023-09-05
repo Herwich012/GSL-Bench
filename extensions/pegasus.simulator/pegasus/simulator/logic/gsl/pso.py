@@ -14,12 +14,14 @@ from pegasus.simulator.logic.gsl import GSL
 
 class PSO(GSL):
     def __init__(self,
-                 env_dict:dict = {},
+                 env_dict:dict,
+                 particles:int,               # number of particles (multirotors)
                  env_bound_sep:float = 1.0,   # [m] min distance from environment bounds
-                 particles:int = 2,           # number of particles (multirotors)
-                 weight:float = 0.5,          # particle weight 
-                 cognitive_coeff:float = 0.5, # cognitive coefficient
-                 social_coeff:float = 0.5     # social coefficient
+                 weight:float = 1.0,          # particle weight 
+                 cognitive_coeff:float = 1.0, # cognitive coefficient
+                 social_coeff:float = 1.0,    # social coefficient
+                 wp_dist:float = 0.5,         # waypoint scaling factor
+                 d_swarm:float = 1.0          # [m] distance between particles before they repulse
                  ) -> None:
         
         # Initialize the Super class "object" attributes
@@ -29,10 +31,10 @@ class PSO(GSL):
         self.env_bounds_sep = env_bound_sep
         self.env_bounds = np.array([[self.env_spec["env_min"][0] + self.env_bounds_sep,   # min X
                                      self.env_spec["env_min"][1] + self.env_bounds_sep,   # min Y
-                                     self.env_spec["env_min"][2] + self.env_bounds_sep],  # min Z
+                                     self.env_spec["env_min"][2]],#+ self.env_bounds_sep],  # min Z
                                     [self.env_spec["env_max"][0] - self.env_bounds_sep,   # max X
                                      self.env_spec["env_max"][1] - self.env_bounds_sep,   # max Y
-                                     self.env_spec["env_max"][2] - self.env_bounds_sep]]) # max Z
+                                     self.env_spec["env_max"][2]]])# - self.env_bounds_sep]]) # max Z
 
         self.draw = _debug_draw.acquire_debug_draw_interface()
 
@@ -40,17 +42,19 @@ class PSO(GSL):
         self.weight = weight
         self.cognitive_coeff = cognitive_coeff
         self.social_coeff = social_coeff
+        self.wp_dist = wp_dist
+        self.d_swarm = d_swarm
 
         self.pos = np.zeros((particles,2)) # particle's positions in XY
         self.pos_best = self.pos # particle's best known positions
         self.swarm_pos_best = np.array([self.env_bounds[1,0]-self.env_bounds[0,0],
                                         self.env_bounds[1,1]-self.env_bounds[0,1]]) * \
                                             np.random.rand(2) - np.array([self.env_bounds[0,0],self.env_bounds[0,1]]) # swarms best position in XY
-        self.vel = 0.3*np.random.rand(particles,2) # particle's velocities in XY
+        self.vel = (2*np.random.rand(particles,2)-1) # particle's velocities in XY
         self.heading = 0.0 # [rad]
 
         self.gas_sensor_prev = np.zeros((particles,))
-        self.gas_sensor_best = np.ones((particles,))*np.inf
+        self.gas_sensor_best = np.ones((particles,)) * 50000.0 # TODO - change value based on gas sensor type
         self.gas_swarm_best = np.inf
 
 
@@ -64,28 +68,19 @@ class PSO(GSL):
             gas_sensor (float): current gas sensor reading [ohms]
         Returns:
             np.ndarray: A 3x3 numpy matrix with the next waypoint
-        """ 
-        # update readings and posistions
-        if gas_sensor < self.gas_sensor_best[id]:
-            self.gas_sensor_best[id] = gas_sensor
-            self.pos_best[id] = loc[0,:2]
-            if self.gas_sensor_best[id] < self.gas_swarm_best:
-                self.gas_swarm_best = self.gas_sensor_best[id]
-                self.swarm_pos_best = self.pos_best[id]
+        """
 
         carb.log_warn(f"[PSO] id:{id} gas sensor now-prev: {'{:5.0f}'.format(gas_sensor)} - {'{:5.0f}'.format(self.gas_sensor_prev[id])}")
-        # Get random coefficients
-        r = 0.5*np.random.rand(2)
-        
-        # Update velocity
-        self.vel[id] = self.weight * self.vel[id,:] + \
-            r[0] * self.cognitive_coeff * (self.pos_best[id] - loc[0,:2]) + \
-            r[1] * self.social_coeff * (self.swarm_pos_best - loc[0,:2])
+        self.pos[id] = loc[0,:2]
+        self.update_reading(id, gas_sensor)
 
-        print(f"vel: {self.vel[id]}")
-        print(f"r: {r}")
-        print(f"pos_best: {self.pos_best[id]}")
-        print(f"swarm_best: {self.swarm_pos_best}")
+        neighbours = self.check_for_neighbours(id)
+        
+        if not neighbours:
+            self.update_velocity(id)
+        else:
+            self.set_repulsion_velocity(id, neighbours)
+
         while True:
             # update position
             movement = np.array([[self.vel[id,0], self.vel[id,1], 0.0],
@@ -98,8 +93,7 @@ class PSO(GSL):
                 break
             else:
                 carb.log_warn(f"Vehicle {id}: waypoint outside environment: {wp[0]}")
-                movement = np.zeros((3,3))
-
+                movement = -movement  # for now go back where you came from
 
         self.gas_sensor_prev[id] = gas_sensor
         return wp
@@ -109,6 +103,63 @@ class PSO(GSL):
         #self.heading = 0.0 # [rad]
         self.gas_sensor_prev = np.zeros((self.particles,))
 
+
+    def initialize(self, id, init_pos):
+        self.pos_best[id] = init_pos[:2]
+
+    
+    def update_reading(self, id:int, sensor_reading:float) -> None:
+        if sensor_reading and sensor_reading < self.gas_sensor_best[id]:
+            self.gas_sensor_best[id] = sensor_reading
+            self.pos_best[id] = self.pos[id]
+            print(f"{id} updated best own position!")
+            if self.gas_sensor_best[id] < self.gas_swarm_best:
+                self.gas_swarm_best = self.gas_sensor_best[id]
+                self.swarm_pos_best = self.pos_best[id]
+                print(f"{id} updated best swarm position!")
+
+
+    def update_velocity(self, id:int) -> None:
+        # Get random coefficients
+        r = np.random.rand(2)
+        
+        # Update velocity
+        self.vel[id] = self.weight * self.vel[id] + \
+            r[0] * self.cognitive_coeff * (self.pos_best[id] - self.pos[id]) + \
+            r[1] * self.social_coeff * (self.swarm_pos_best - self.pos[id])
+        
+        # normalize vector
+        self.vel[id] = self.wp_dist*(self.vel[id]/np.linalg.norm(self.vel[id]))
+        
+        print(f"vel: {self.vel[id]}")
+        print(f"r: {r}")
+        print(f"pos_best: {self.pos_best[id]}")
+        print(f"swarm_best: {self.swarm_pos_best}")
+    
+
+    def check_for_neighbours(self, id:int) -> list:
+        neighbours = []
+        
+        for i in [x for x in range(self.particles) if x != id]:
+            if np.linalg.norm((self.pos[id] - self.pos[i])) < self.d_swarm:
+                neighbours.append(i)
+
+        return neighbours
+
+
+    def set_repulsion_velocity(self, id:int, neighbours:list) -> None:
+        # collect all the 'anti vectors'
+        for neighbour in neighbours:
+            self.vel[id] += self.pos[id] - self.pos[neighbour]
+
+        # normalize vector
+        self.vel[id] = self.wp_dist*(self.vel[id]/np.linalg.norm(self.vel[id]))
+
+        print("REPULSION!!!!!!!!!!!!!!!!!")        
+        print(f"vel: {self.vel[id]}")
+        print(f"pos_best: {self.pos_best[id]}")
+        print(f"swarm_best: {self.swarm_pos_best}")
+        
 
     def check_in_env(self, wp:np.ndarray):
         """
@@ -138,6 +189,3 @@ class PSO(GSL):
         sizes = [1.0]
         
         self.draw.draw_points(point_list, colors, sizes)
-
-    def initialize(self, id, init_pos):
-        self.pos_best[id] = init_pos[:2]
