@@ -17,15 +17,16 @@ class PSO(GSL):
                  env_dict:dict,
                  particles:int,               # number of particles (multirotors)
                  env_bound_sep:float = 1.0,   # [m] min distance from environment bounds
-                 weight:float = 1.0,          # particle weight 
+                 weight:float = 0.5,          # particle weight 
                  cognitive_coeff:float = 1.0, # cognitive coefficient
                  social_coeff:float = 1.0,    # social coefficient
                  wp_dist:float = 0.5,         # waypoint scaling factor
-                 d_swarm:float = 1.0          # [m] distance between particles before they repulse
+                 d_swarm:float = 1.5          # [m] distance between particles before they repulse
                  ) -> None:
         
         # Initialize the Super class "object" attributes
         super().__init__(gsl_type="DungBeetle")
+
         
         self.env_spec = env_dict["env_spec"]
         self.env_bounds_sep = env_bound_sep
@@ -35,8 +36,6 @@ class PSO(GSL):
                                     [self.env_spec["env_max"][0] - self.env_bounds_sep,   # max X
                                      self.env_spec["env_max"][1] - self.env_bounds_sep,   # max Y
                                      self.env_spec["env_max"][2]]])# - self.env_bounds_sep]]) # max Z
-
-        self.draw = _debug_draw.acquire_debug_draw_interface()
 
         self.particles = particles
         self.weight = weight
@@ -80,28 +79,33 @@ class PSO(GSL):
             self.update_velocity(id)
         else:
             self.set_repulsion_velocity(id, neighbours)
+        
+        # update position
+        movement = np.array([[self.vel[id,0], self.vel[id,1], 0.0],
+                            [0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0]])
 
-        while True:
-            # update position
-            movement = np.array([[self.vel[id,0], self.vel[id,1], 0.0],
-                                [0.0, 0.0, 0.0],
-                                [0.0, 0.0, 0.0]])
+        wp = loc + movement
 
-            wp = loc + movement
-
-            if self.check_in_env(wp): 
-                break
-            else:
-                carb.log_warn(f"Vehicle {id}: waypoint outside environment: {wp[0]}")
-                movement = -movement  # for now go back where you came from
+        if not self.check_in_env(wp): 
+            carb.log_warn(f"Vehicle {id}: waypoint outside environment: {wp[0]}, repulsion from wall")
+            wp = loc - (1.2 * movement)  # for now go back where you came from + some safety factor
 
         self.gas_sensor_prev[id] = gas_sensor
         return wp
 
     def reset(self):
-        self.state = self.states[0] # starting state is movement perpendicular to the wind 
-        #self.heading = 0.0 # [rad]
+        self.pos = np.zeros((self.particles,2)) # particle's positions in XY
+        self.pos_best = self.pos # particle's best known positions
+        self.swarm_pos_best = np.array([self.env_bounds[1,0]-self.env_bounds[0,0],
+                                        self.env_bounds[1,1]-self.env_bounds[0,1]]) * \
+                                            np.random.rand(2) - np.array([self.env_bounds[0,0],self.env_bounds[0,1]]) # swarms best position in XY
+        self.vel = (2*np.random.rand(self.particles,2)-1) # particle's velocities in XY
+        self.heading = 0.0 # [rad]
+
         self.gas_sensor_prev = np.zeros((self.particles,))
+        self.gas_sensor_best = np.ones((self.particles,)) * 50000.0 # TODO - change value based on gas sensor type
+        self.gas_swarm_best = np.inf
 
 
     def initialize(self, id, init_pos):

@@ -184,11 +184,11 @@ class PegasusApp:
         self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
 
         # Auxiliar variable for repeated runs
-        self.runs = 3
+        self.runs = 1
         self.statistics = [f"pso_run_{i}" for i in range(self.runs)]
 
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=180.0,
+        self.stop_cond = StopCondition(time=150.0,
                                        source_pos=np.array([5.0, 0.75, 5.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=2.0)
         
@@ -204,7 +204,7 @@ class PegasusApp:
         # Run the simulation again for every statistics file
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
-            self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
+            self.controller.results_files = self.curr_dir + f"/results/{statistics_file}"
 
             # Start the simulation
             self.timeline.play()

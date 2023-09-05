@@ -153,7 +153,7 @@ class NonlinearController(Backend):
             statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
             statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
             #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
-            np.savez(f"{self.results_files}_{self.vehicle_id}", **statistics)
+            np.savez(f"{self.results_files}_id{self.vehicle_id}.npz", **statistics)
             carb.log_warn("Statistics saved to: " + self.results_files)
     
         self.gsl.reset()
