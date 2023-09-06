@@ -26,10 +26,11 @@ class StopCondition():
         return stop
 
 
-    def stop_distance2src_cond(self, pos) -> bool:
+    def stop_distance2src_cond(self, time, pos,) -> bool:
         stop = False
         # if the distance between robot and source is smaller than the stop distance
-        if np.linalg.norm((pos - self.src_pos)) < self.stop_distance2src:
+        # and the time is more than 5 sec, because of a reset bug
+        if time > 5.0 and np.linalg.norm((pos - self.src_pos)) < self.stop_distance2src:
             stop = True
             carb.log_warn(f"Within stop distance ({round(self.stop_distance2src,2)}m), stopping simulation...")
 
@@ -47,7 +48,7 @@ class StopCondition():
             self.type = "time"
             return True
         
-        if self.stop_distance2src is not None and self.stop_distance2src_cond(pos_current):
+        if self.stop_distance2src is not None and self.stop_distance2src_cond(time_current,pos_current):
             self.type = "dist2src"
             return True 
 

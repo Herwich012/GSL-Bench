@@ -75,7 +75,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 5.0 # [m]
+        self.search_height = 2.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
