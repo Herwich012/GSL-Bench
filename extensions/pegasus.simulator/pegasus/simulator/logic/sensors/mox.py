@@ -42,6 +42,7 @@ class MOX(Sensor):
             >>> {"env_dict": {}       # dict with environment info
                  "draw": False        # draw the filaments
                  "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                 "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen
                  "update_rate": 4.0,  # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                  "gas_data_start_iter": 0,  # start iteration
@@ -86,8 +87,9 @@ class MOX(Sensor):
         self._gas_data_time_step = config.get("gas_data_time_step", 0.5) # [s] !!!
         self._updates_per_gas_iter = int(self._gas_data_time_step*self._update_rate) - 1
 
-        # Set sensor model
+        # Set gas type and sensor model
         self._sensor_model = config.get("sensor_model", 0) # see mox_utils.py for sensor models
+        self._gas_type = config.get("gas_type", 0)
 
         # Sensor outputs
         self._sensor_output = 0.0
@@ -220,7 +222,7 @@ class MOX(Sensor):
             #1. Set Sensor Output based on gas concentrations (gas type dependent)
             #---------------------------------------------------------------------
             # RS/R0 = A*conc^B (a line in the loglog scale)
-            # TODO implement multiple gases?
+            # TODO implement detection of multiple gases at once?
             # TODO implement noise?
 
             resistance_variation = 0.0
@@ -229,8 +231,8 @@ class MOX(Sensor):
             if gas_concentration == 0.0: # if statement because python math.pow() does not like infinity
                 RS_R0 = sensitivity_air[self._sensor_model]
             else:
-                RS_R0 = sensitivity_lineloglog[self._sensor_model][0][0] * \
-                    math.pow(gas_concentration, sensitivity_lineloglog[self._sensor_model][0][1])
+                RS_R0 = sensitivity_lineloglog[self._sensor_model][self._gas_type][0] * \
+                    math.pow(gas_concentration, sensitivity_lineloglog[self._sensor_model][self._gas_type][1])
 
             # Ensure we never overpass the baseline level (max allowed)
             if (RS_R0 > sensitivity_air[self._sensor_model]):

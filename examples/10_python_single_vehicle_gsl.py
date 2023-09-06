@@ -94,6 +94,7 @@ class PegasusApp:
         mox_config = {"env_dict": env_dict,
                       "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                      "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                       "gas_data_start_iter": 300,  # start iteration
