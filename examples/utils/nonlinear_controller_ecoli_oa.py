@@ -75,7 +75,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 2.0 # [m]
+        self.search_height = 4.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -136,18 +136,16 @@ class NonlinearController(Backend):
         """
 
         # Check if we should save the statistics to some file or not
-        if self.results_files is None:
-            return
-        
-        statistics = {} # TODO - check if skipping the first entry is still necessary
-        statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
-        if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
-            statistics["run_success"] = np.vstack(self.run_success)
-            statistics["p"] = np.vstack(self.position_over_time[1:])
-            statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
-            statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
-            np.savez(self.results_files, **statistics)
-            carb.log_warn("Statistics saved to: " + self.results_files)
+        if self.results_files != None:        
+            statistics = {} # TODO - check if skipping the first entry is still necessary
+            statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
+            if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
+                statistics["run_success"] = np.vstack(self.run_success)
+                statistics["p"] = np.vstack(self.position_over_time[1:])
+                statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
+                statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
+                np.savez(self.results_files, **statistics)
+                carb.log_warn("Statistics saved to: " + self.results_files)
     
         self.gsl.reset()
         self.waypoints.set_takeoff()

@@ -87,8 +87,23 @@ class PegasusApp:
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
-        # Set spawn position of the multirotor
-        init_pos_1 = [7.5, 3.0, 0.2]
+        posittion_grid = [[3.0, 3.0, 0.2],
+                          [7.5, 3.0, 0.2],
+                          [12.0,3.0, 0.2],
+                          [3.0, 7.5, 0.2],
+                          [7.5, 7.5, 0.2],
+                          [12.0,7.5, 0.2],
+                          [3.0, 12.0,0.2],
+                          [7.5, 12.0,0.2],
+                          [12.0,12.0,0.2]]
+        
+        # Set spawn position of the multirotor ######################################
+        init_pos_1 = posittion_grid[0]
+        
+        # Auxiliar variable for repeated runs #######################################
+        self.save_statistics = True
+        self.runs = 10
+        self.statistics = [f"010_ecoli_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -128,10 +143,6 @@ class PegasusApp:
             config=config_multirotor1,
         )
 
-        # Auxiliar variable for repeated runs
-        self.runs = 10
-        self.statistics = [f"002_ecoli_{i}" for i in range(self.runs)]
-
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
                                        source_pos=np.array([5.0, 1.0, 2.0]), # TODO - read source_pos from settingsl, and add 2D setting
@@ -152,7 +163,8 @@ class PegasusApp:
         # Run the simulation again for every statistics file
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
-            self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
+            if self.save_statistics:
+                self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
 
             # Start the simulation
             self.timeline.play()
