@@ -30,8 +30,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-#from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+#from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -97,13 +97,14 @@ class PegasusApp:
                           [7.5, 12.0,0.2],
                           [12.0,12.0,0.2]]
         
-        # Set spawn position of the multirotor ######################################
-        init_pos_1 = posittion_grid[0]
+        # Set spawn position of the multirotor and experiment ID ##################################################
+        init_pos_1 = posittion_grid[8]
+        self.exp_id = '027'
         
-        # Auxiliar variable for repeated runs #######################################
+        # Auxiliar variable for repeated runs
         self.save_statistics = True
         self.runs = 10
-        self.statistics = [f"010_ecoli_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_beetle_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
@@ -145,7 +146,7 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([5.0, 1.0, 2.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment
@@ -184,7 +185,7 @@ class PegasusApp:
         
         # Cleanup and quit
         carb.log_warn("PegasusApp Simulation App is closing.")
-        carb.log_warn(f"Finished in {datetime.now() - self.start_time}")
+        carb.log_warn(f"Finished experiment {self.exp_id} in {datetime.now() - self.start_time}")
         simulation_app.close()
 
 
