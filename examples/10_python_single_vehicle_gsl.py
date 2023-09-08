@@ -16,7 +16,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": True})
+simulation_app = SimulationApp({"headless": False})
 
 # -----------------------------------
 # The actual script should start here
@@ -99,7 +99,7 @@ class PegasusApp:
         
         # Set spawn position of the multirotor and experiment ID ##################################################
         init_pos_1 = posittion_grid[8]
-        self.exp_id = '027'
+        self.exp_id = '000'
         
         # Auxiliar variable for repeated runs
         self.save_statistics = True
@@ -108,7 +108,7 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": False,        # draw the filaments
+                      "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,  # [Hz] update rate of sensor
@@ -173,7 +173,7 @@ class PegasusApp:
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=False)
+                self.world.step(render=True)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller.run_success[0] = True

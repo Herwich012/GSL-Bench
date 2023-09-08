@@ -94,16 +94,6 @@ class PegasusApp:
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
-        # posittion_grid = [[3.0, 3.0, 0.2],
-        #                   [7.5, 3.0, 0.2],
-        #                   [12.0,3.0, 0.2],
-        #                   [3.0, 7.5, 0.2],
-        #                   [7.5, 7.5, 0.2],
-        #                   [12.0,7.5, 0.2],
-        #                   [3.0, 12.0,0.2],
-        #                   [7.5, 12.0,0.2],
-        #                   [12.0,12.0,0.2]]
-        
         # Set spawn position of the multirotor and experiment ID ##################################################
         self.exp_id = id
         init_pos_1 = pos
