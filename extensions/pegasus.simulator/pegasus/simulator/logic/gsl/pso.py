@@ -25,7 +25,7 @@ class PSO(GSL):
                  ) -> None:
         
         # Initialize the Super class "object" attributes
-        super().__init__(gsl_type="DungBeetle")
+        super().__init__(gsl_type="PSO")
 
         
         self.env_spec = env_dict["env_spec"]

@@ -15,6 +15,7 @@ class E_Coli(GSL):
                  env_dict:dict = {},
                  surge_distance:float = 0.5,
                  env_bound_sep:float = 0.3, # [m] min distance from environment bounds
+                 random_walker:bool = False # always perform random actions (zero measurement)
                 ) -> None:
         
         # Initialize the Super class "object" attributes
@@ -29,6 +30,8 @@ class E_Coli(GSL):
                                     [self.env_spec["env_max"][0] - self.env_bounds_sep,   # max X
                                      self.env_spec["env_max"][1] - self.env_bounds_sep,   # max Y
                                      self.env_spec["env_max"][2] - self.env_bounds_sep]]) # max Z
+        self.random_walker = random_walker
+        
         self.sensor_prev = 0.0
         self.surge_heading_prev = 0.0 # [rad]
 
@@ -46,7 +49,7 @@ class E_Coli(GSL):
         surge = False
 
         while True:
-            if sensor >= self.sensor_prev: # if reading is the same/gets worse, move randomly
+            if sensor >= self.sensor_prev or self.random_walker: # if reading is the same/gets worse, move randomly
                 surge_heading =  2*np.pi*np.random.rand()
                 carb.log_warn(f"[E. Coli] {'{:5.0f}'.format(sensor)} >= {'{:5.0f}'.format(self.sensor_prev)}, RANDOM  heading: {'{:1.2f}'.format(surge_heading)}")
             else:
