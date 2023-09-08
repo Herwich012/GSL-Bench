@@ -143,7 +143,7 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=np.array([1.0, 10.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment
