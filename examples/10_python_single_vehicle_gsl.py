@@ -87,22 +87,22 @@ class PegasusApp:
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
-        posittion_grid = [[3.0, 3.0, 0.2],
-                          [7.5, 3.0, 0.2],
-                          [12.0,3.0, 0.2],
-                          [3.0, 7.5, 0.2],
-                          [7.5, 7.5, 0.2],
-                          [12.0,7.5, 0.2],
-                          [3.0, 12.0,0.2],
-                          [7.5, 12.0,0.2],
-                          [12.0,12.0,0.2]]
+        posittion_grid = [[3.0, 3.0, 0.2], # 0
+                          [7.5, 3.0, 0.2], # 1 
+                          [12.0,3.0, 0.2], # 2
+                          [3.0, 7.5, 0.2], # 3
+                          [7.5, 7.5, 0.2], # 4
+                          [12.0,7.5, 0.2], # 5
+                          [3.0, 12.0,0.2], # 6
+                          [7.5, 12.0,0.2], # 7
+                          [12.0,12.0,0.2]] # 8
         
         # Set spawn position of the multirotor and experiment ID ##################################################
-        init_pos_1 = posittion_grid[8]
+        init_pos_1 = posittion_grid[4]
         self.exp_id = '000'
         
         # Auxiliar variable for repeated runs
-        self.save_statistics = True
+        self.save_statistics = False
         self.runs = 10
         self.statistics = [f"{self.exp_id}_beetle_{i}" for i in range(self.runs)]
 

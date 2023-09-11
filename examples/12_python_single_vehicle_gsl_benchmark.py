@@ -37,8 +37,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-#from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -162,7 +162,8 @@ class PegasusApp:
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
             if self.save_statistics:
-                self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
+                #self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
+                self.controller.results_files = f"/home/hajo/0THESIS/experiments/{self.exp_id}/{statistics_file}.npz"
 
             # Start the simulation
             self.timeline.play()

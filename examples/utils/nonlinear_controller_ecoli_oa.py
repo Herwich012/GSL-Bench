@@ -92,7 +92,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = E_Coli(env_dict, surge_distance= 1.0, random_walker=True)
+        self.gsl = E_Coli(env_dict, surge_distance= 1.0)
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))

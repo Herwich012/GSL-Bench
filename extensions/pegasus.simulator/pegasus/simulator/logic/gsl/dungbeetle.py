@@ -31,8 +31,8 @@ class DungBeetle(GSL):
                                      self.env_spec["env_max"][1] - self.env_bounds_sep,   # max Y
                                      self.env_spec["env_max"][2] - self.env_bounds_sep]]) # max Z
 
-        self.states = ['90CCW', 'ZIG_CCW', 'ZAG_CW']
-        self.state = self.states[0] # starting state is movement perpendicular to the wind 
+        self.states = ['90CCW', '90CW', 'ZIG_CCW', 'ZAG_CW']
+        self.state = self.states[0] # starting state is movement -90deg to the wind 
 
         self.zigzag_angle = zigzag_angle # deg
         self.wp_dist = wp_dist
@@ -55,22 +55,29 @@ class DungBeetle(GSL):
 
         carb.log_warn(f"[DungBeetle] gas sensor now-prev: {'{:5.0f}'.format(gas_sensor)} - {'{:5.0f}'.format(self.gas_sensor_prev)}")
         # determine state and angle
-        if gas_sensor >= self.gas_sensor_prev and self.state != self.states[0]: # reading gets worse, change zigzag direction
-            if self.state == self.states[1]:
-                self.state = self.states[2]
+        if gas_sensor >= self.gas_sensor_prev and self.state != self.states[0] and self.state != self.states[1]: # reading gets worse, change zigzag direction
+            if self.state == self.states[2]:
+                self.state = self.states[3]
                 self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(self.zigzag_angle))
                 carb.log_warn(f"[DungBeetle] changing zigzag direction to +{self.zigzag_angle}deg")
             else:
-                self.state = self.states[1]
+                self.state = self.states[2]
                 self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
                 carb.log_warn(f"[DungBeetle] changing zigzag direction to -{self.zigzag_angle}deg")
         elif gas_sensor < self.gas_sensor_prev and self.state == self.states[0]:
-            self.state = self.states[1]
+            self.state = self.states[2]
             self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(self.zigzag_angle))
+            carb.log_warn(f"[DungBeetle] initiating zigzag!")
+        elif gas_sensor < self.gas_sensor_prev and self.state == self.states[1]:
+            self.state = self.states[3]
+            self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(self.zigzag_angle))
             carb.log_warn(f"[DungBeetle] initiating zigzag!")
         elif self.state == self.states[0]:
             self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(90))
-            carb.log_warn(f"[DungBeetle] moving 90deg to the windangle...")
+            carb.log_warn(f"[DungBeetle] moving -90deg to the windangle...")
+        elif self.state == self.states[1]:
+            self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(90))
+            carb.log_warn(f"[DungBeetle] moving +90deg to the windangle...")
 
         while True:
             # determine waypoint
@@ -84,12 +91,18 @@ class DungBeetle(GSL):
                 break
             else:
                 carb.log_warn(f"Waypoint outside environment! changing angle...")
-                # angle = (2*np.pi*np.random.rand()) - np.pi
                 if self.state == self.states[0]:
-                    self.heading = np.pi*(2*np.random.rand() - 1)
-                elif self.state == self.states[1]: # change direction
+                    #self.heading = np.pi*(2*np.random.rand() - 1)
+                    self.state = self.states[1]
+                    self.heading = self.heading = self.map_angle_to_pipi(upwind_angle + np.deg2rad(90))
+                elif self.state == self.states[1]:
+                    self.state = self.states[0]
+                    self.heading = self.heading = self.map_angle_to_pipi(upwind_angle - np.deg2rad(90))
+                elif self.state == self.states[2]: 
+                    self.state = self.states[3]
                     self.heading = self.map_angle_to_pipi(self.heading + 2*np.deg2rad(self.zigzag_angle))
-                else: # change direction
+                else:
+                    self.state = self.states[2]
                     self.heading = self.map_angle_to_pipi(self.heading - 2*np.deg2rad(self.zigzag_angle))
 
         self.gas_sensor_prev = gas_sensor
