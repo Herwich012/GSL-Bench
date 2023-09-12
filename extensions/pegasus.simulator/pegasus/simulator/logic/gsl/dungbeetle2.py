@@ -1,17 +1,17 @@
 """
-| File: dungbeetle.py
+| File: dungbeetle2.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
 
-__all__ = ["DungBeetle"]
+__all__ = ["DungBeetle2"]
 
 import carb
 import math
 import numpy as np
 from pegasus.simulator.logic.gsl import GSL  
 
-class DungBeetle(GSL):
+class DungBeetle2(GSL):
     def __init__(self,
                  env_dict:dict = {},
                  env_bound_sep:float = 1.0, # [m] min distance from environment bounds
@@ -20,7 +20,7 @@ class DungBeetle(GSL):
                  ) -> None:
         
         # Initialize the Super class "object" attributes
-        super().__init__(gsl_type="DungBeetle")
+        super().__init__(gsl_type="DungBeetle2")
         
         self.env_spec = env_dict["env_spec"]
         self.env_bounds_sep = env_bound_sep

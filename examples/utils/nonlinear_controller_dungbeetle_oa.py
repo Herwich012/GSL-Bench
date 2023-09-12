@@ -18,7 +18,7 @@ from pegasus.simulator.logic.backends import Backend
 from pegasus.simulator.logic.trajectory import Waypoints
 from pegasus.simulator.logic.obstacle_avoidance import ObstacleAvoidance
 from pegasus.simulator.logic.trajectory import TrajectoryMinJerk
-from pegasus.simulator.logic.gsl.dungbeetle import DungBeetle
+from pegasus.simulator.logic.gsl.dungbeetle1 import DungBeetle1
 
 # Auxiliary scipy
 from scipy.spatial.transform import Rotation
@@ -75,7 +75,7 @@ class NonlinearController(Backend):
 
         # Controller related parameters
         self.hold_time = 2.0 # [s]
-        self.search_height = 4.0 # [m] # TODO - move to main script
+        self.search_height = 2.0 # [m] # TODO - move to main script
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]
         self.hold_end_time = np.inf # [s]
@@ -92,7 +92,7 @@ class NonlinearController(Backend):
         self.tr = TrajectoryMinJerk(time2wp=3.0)
 
         # GSL algorithm
-        self.gsl = DungBeetle(env_dict) # TODO - move to main script
+        self.gsl = DungBeetle1(env_dict) # TODO - move to main script
         
         # Position, velocity... etc references
         self.trajectory = np.zeros((1,14))
