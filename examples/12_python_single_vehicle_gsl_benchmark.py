@@ -37,7 +37,7 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+#from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
 from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
@@ -62,7 +62,7 @@ class PegasusApp:
         
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_empty'
+        env_type = 'wh_simple'
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
@@ -143,7 +143,7 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([1.0, 10.0, 2.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment

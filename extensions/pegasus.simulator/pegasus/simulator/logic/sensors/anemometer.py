@@ -12,7 +12,10 @@ import numpy as np
 from typing import Tuple
 from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.sensors import Sensor
-
+# TODO - validate the anemometer performance with datasheets of real anemometers:
+# https://docs.vaisala.com/v/u/B210917EN-M/en-US
+# https://www.youngusa.com/product/ultrasonic-anemometer-4/
+# https://link.springer.com/referenceworkentry/10.1007/978-981-10-5945-2_18
 
 class Anemometer(Sensor):
     """The class that implements a anemometer sensor. This class inherits the base class Sensor.

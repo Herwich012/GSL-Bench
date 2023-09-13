@@ -5,7 +5,7 @@ def main():
     ISAACSIM_PYTHON = '/home/hajo/.local/share/ov/pkg/isaac_sim-2022.2.0/python.sh'
     main_command = f'{ISAACSIM_PYTHON} examples/12_python_single_vehicle_gsl_benchmark.py'
 
-    start_id = 73 # starting experiment id
+    start_id = 100 # starting experiment id
     posittions = [[3.0, 3.0, 0.2],
                   [7.5, 3.0, 0.2],
                   [12.0,3.0, 0.2],

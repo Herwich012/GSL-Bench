@@ -16,7 +16,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": True})
+simulation_app = SimulationApp({"headless": False})
 
 # -----------------------------------
 # The actual script should start here
@@ -30,8 +30,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-#from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+#from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -55,7 +55,7 @@ class PegasusApp:
         
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_empty'
+        env_type = 'wh_simple'
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
@@ -98,17 +98,17 @@ class PegasusApp:
                           [12.0,12.0,0.2]] # 8
         
         # Set spawn position of the multirotor and experiment ID ##################################################
-        init_pos_1 = posittion_grid[1]
-        self.exp_id = '074'
+        init_pos_1 = posittion_grid[4]
+        self.exp_id = '083'
         
         # Auxiliar variable for repeated runs
         self.save_statistics = False
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_beetle_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": False,        # draw the filaments
+                      "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,  # [Hz] update rate of sensor
@@ -146,7 +146,7 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([1.0, 10.0, 2.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment

@@ -41,6 +41,12 @@ class StopCondition():
         stop = False
         # TODO implement gas concentration stop condition
         return stop
+    
+
+    def stop_source_declaration_cond(self) -> bool:
+        stop = False
+        # TODO implement source declaration stop condition
+        return stop
 
 
     def get(self, time_current=None, pos_current=None) -> bool:
