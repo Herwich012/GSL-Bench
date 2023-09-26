@@ -47,6 +47,12 @@ class StopCondition():
         stop = False
         # TODO implement source declaration stop condition
         return stop
+    
+
+    def stop_stuck_cond(self) -> bool:
+        stop = False
+        # TODO implement stuck stop condition (when the robot seems to be stuck)
+        return stop
 
 
     def get(self, time_current=None, pos_current=None) -> bool:

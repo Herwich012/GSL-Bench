@@ -168,13 +168,13 @@ class MOX(Sensor):
             self._gas_conc = 0.0
             for fil in gas_data: # filament: id, x, y, z, sigma
                 filament = Filament(fil[0],fil[1],fil[2],fil[3],fil[4])
-                dist_SQR = math.pow((loc[0] - filament.x),2) + math.pow((loc[1] - filament.y),2) + math.pow((loc[2] - filament.z),2)
+                dist_SQR = pow((loc[0] - filament.x),2) + pow((loc[1] - filament.y),2) + pow((loc[2] - filament.z),2)
                 limit_distance = filament.sigma*5/100
                 #print(f"SQR: {dist_SQR}")
                 #print(f"lim: {limit_distance}")
 
                 # If filament is within range, calculate the contribution to the gas concentration
-                if dist_SQR < math.pow(limit_distance,2) and \
+                if dist_SQR < pow(limit_distance,2) and \
                     self.check_env_for_obstacle3D(loc, np.array([filament.x, filament.y, filament.z])):
                     self._gas_conc += self.concentration_from_filament(loc, filament, gas_data_head)
 
@@ -201,12 +201,12 @@ class MOX(Sensor):
 
 
     def concentration_from_filament(self, loc:np.ndarray, filament:Filament, gas_data_head:np.ndarray) -> float:
-        distance_cm = 100 * math.sqrt(math.pow((loc[0] - filament.x),2) + math.pow((loc[1] - filament.y),2) + \
-                                      math.pow((loc[2] - filament.z),2))
+        distance_cm = 100 * math.sqrt(pow((loc[0] - filament.x),2) + pow((loc[1] - filament.y),2) + \
+                                      pow((loc[2] - filament.z),2))
 
         num_moles_target_cm3 = (gas_data_head['filament_num_moles_of_gas'][0] / \
-                                (math.sqrt(8*math.pow(math.pi,3)) * math.pow(filament.sigma,3))) * \
-                                    math.exp(-math.pow(distance_cm,2)/(2*math.pow(filament.sigma,2)))
+                                (math.sqrt(8*pow(math.pi,3)) * pow(filament.sigma,3))) * \
+                                    math.exp(-pow(distance_cm,2)/(2*pow(filament.sigma,2)))
         ppm = num_moles_target_cm3 / gas_data_head['num_moles_all_gases_in_cm3'][0] * 1000000 # parts of target gas per million
         return ppm
 

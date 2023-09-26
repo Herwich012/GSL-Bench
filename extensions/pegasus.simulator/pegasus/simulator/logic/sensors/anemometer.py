@@ -169,8 +169,8 @@ class Anemometer(Sensor):
         noise = np.random.normal(0.0, self._sensor_noise, (2,)) # generate sensor noise
         wind_vec_apparent = wind_vec - state.linear_velocity # apparent wind in inertial orientation, but body velocity
         
-        wind_speed_XY = np.linalg.norm(wind_vec_apparent[:-1]) + noise[0]
-        
+        wind_speed_XY = math.sqrt(pow(wind_vec_apparent[0],2) + pow(wind_vec_apparent[1],2))
+
         # (IMPORTANT) Follow standards on wind measurement (real anemometers):
         # return the upwind direction in the inertial ref system, ENU convention (y-dir = North)
         # range [-pi,pi], positive to the right      

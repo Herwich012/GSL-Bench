@@ -30,8 +30,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-#from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -98,25 +98,25 @@ class PegasusApp:
                           [12.0,12.0,0.2]] # 8
         
         # Set spawn position of the multirotor and experiment ID ##################################################
-        init_pos_1 = posittion_grid[4]
-        self.exp_id = '083'
+        init_pos_1 = posittion_grid[5]
+        self.exp_id = '000'
         
         # Auxiliar variable for repeated runs
         self.save_statistics = False
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_beetle_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,        # draw the filaments
+                      "draw": False,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
-                      "update_rate": 4.0,  # [Hz] update rate of sensor
+                      "update_rate": 10.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
-                      "gas_data_start_iter": 300,  # start iteration
+                      "gas_data_start_iter": 420,  # start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         anemo_config = {"env_dict": env_dict,
-                        "update_rate": 4.0,  # [Hz] update rate of sensor
+                        "update_rate": 10.0,  # [Hz] update rate of sensor
                         "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
                         "wind_data_start_iter": 0,  # start iteration
                         "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
@@ -150,7 +150,8 @@ class PegasusApp:
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment
-        self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
+        #self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
+        self.pg.set_viewport_camera([10.0, 7.5, 21.5], [10.1, 7.5, 1.0])
         
         # Reset the simulation environment so that all articulations (aka robots) are initialized
         self.world.reset()

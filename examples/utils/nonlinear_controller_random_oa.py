@@ -74,7 +74,7 @@ class NonlinearController(Backend):
         self.g = 9.81        # The gravity acceleration ms^-2
 
         # Controller related parameters
-        self.hold_time = 2.0 # [s]
+        self.hold_time = 0.1 # [s]
         self.search_height = 4.0 # [m]
         self.task_states = ['hold', 'move2wp']
         self.task_state = self.task_states[1]

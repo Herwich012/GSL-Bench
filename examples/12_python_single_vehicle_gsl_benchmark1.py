@@ -37,7 +37,7 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_random_oa import NonlinearController
 #from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
@@ -101,7 +101,7 @@ class PegasusApp:
         # Auxiliar variable for repeated runs
         self.save_statistics = True
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_random_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,

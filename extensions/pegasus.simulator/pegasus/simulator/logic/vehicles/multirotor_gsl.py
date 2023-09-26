@@ -42,7 +42,10 @@ class MultirotorConfig:
         self.sensor_configs = sensor_configs
 
         # The default sensors for a quadrotor + MOX
-        self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
+        # self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
+        #                 MOX(config=self.sensor_configs.get('mox', {})),
+        #                 Anemometer(config=sensor_configs.get('anemometer', {}))]
+        self.sensors = [Barometer(), IMU(), GPS(), 
                         MOX(config=self.sensor_configs.get('mox', {})),
                         Anemometer(config=sensor_configs.get('anemometer', {}))]
 
