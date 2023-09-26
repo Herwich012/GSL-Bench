@@ -55,8 +55,8 @@ class PegasusApp:
         
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_simple'
-        env_id = 0
+        env_type = 'wh_complex'
+        env_id = 10
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
         # Environment specifications
@@ -108,12 +108,12 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": False,        # draw the filaments
+                      "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 10.0,  # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
-                      "gas_data_start_iter": 420,  # start iteration
+                      "gas_data_start_iter": 300,  # start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         anemo_config = {"env_dict": env_dict,
                         "update_rate": 10.0,  # [Hz] update rate of sensor
