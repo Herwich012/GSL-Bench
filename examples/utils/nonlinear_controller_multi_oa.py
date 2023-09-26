@@ -142,25 +142,22 @@ class NonlinearController(Backend):
         """
 
         # Check if we should save the statistics to some file or not
-        if self.results_files is None:
-            return
+        if self.results_files is not None:
+            statistics = {} # TODO - check if skipping the first entry is still necessary
+            statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
+            if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
+                statistics["run_success"] = np.vstack(self.run_success)
+                statistics["p"] = np.vstack(self.position_over_time[1:])
+                statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
+                statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
+                #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
+                np.savez(f"{self.results_files}_id{self.vehicle_id}.npz", **statistics)
+                carb.log_warn("Statistics saved to: " + self.results_files)
         
-        statistics = {} # TODO - check if skipping the first entry is still necessary
-        statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
-        if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
-            statistics["run_success"] = np.vstack(self.run_success)
-            statistics["p"] = np.vstack(self.position_over_time[1:])
-            statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
-            statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
-            #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
-            np.savez(f"{self.results_files}_id{self.vehicle_id}.npz", **statistics)
-            carb.log_warn("Statistics saved to: " + self.results_files)
-    
-        self.gsl.reset()
-        self.waypoints.set_takeoff()
+            self.reset_statistics()
 
-        self.reset_statistics()
         self.reset_controller()
+        self.waypoints.set_takeoff()
 
 
     def update_sensor(self, sensor_type: str, data):
@@ -399,4 +396,31 @@ class NonlinearController(Backend):
         self.index = 0
         self.max_index = 0
         self.total_time = 0.0
+        carb.log_warn(f"resetting controller {self.vehicle_id}, total time: {self.total_time}")
         self.p = self.init_pos # reset position
+
+
+    def reset_custom(self):
+        """
+        Resetting the controller. Saving the statistics data for plotting later
+        """
+        self.reset_controller()
+        self.waypoints.set_takeoff()
+
+        # Check if we should save the statistics to some file or not
+        if self.results_files is None:
+            return
+        
+        statistics = {} # TODO - check if skipping the first entry is still necessary
+        statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
+        if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
+            statistics["run_success"] = np.vstack(self.run_success)
+            statistics["p"] = np.vstack(self.position_over_time[1:])
+            statistics["c"] = np.vstack(self.gas_conc_over_time[1:])
+            statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
+            #statistics["wind"] = np.vstack(self.wind_angle_over_time[1:])
+            np.savez(f"{self.results_files}_id{self.vehicle_id}.npz", **statistics)
+            carb.log_warn("Statistics saved to: " + self.results_files)
+    
+        self.reset_statistics()
+

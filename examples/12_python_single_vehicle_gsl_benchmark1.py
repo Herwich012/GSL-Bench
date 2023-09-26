@@ -99,7 +99,7 @@ class PegasusApp:
         init_pos_1 = pos
         
         # Auxiliar variable for repeated runs
-        self.save_statistics = True
+        self.save_statistics = False
         self.runs = 10
         self.statistics = [f"{self.exp_id}_random_{i}" for i in range(self.runs)]
 

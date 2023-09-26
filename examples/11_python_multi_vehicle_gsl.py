@@ -61,6 +61,7 @@ class PegasusApp:
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
+
         # Environment specifications
         with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
             env_spec = yaml.safe_load(file)
@@ -88,15 +89,30 @@ class PegasusApp:
 
         # Get the current directory used to read trajectories and save results
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
-        
+
+        posittion_grid = [[3.0, 3.0, 0.2], # 0
+                          [7.5, 3.0, 0.2], # 1 
+                          [12.0,3.0, 0.2], # 2
+                          [3.0, 7.5, 0.2], # 3
+                          [7.5, 7.5, 0.2], # 4
+                          [12.0,7.5, 0.2], # 5
+                          [3.0, 12.0,0.2], # 6
+                          [7.5, 12.0,0.2], # 7
+                          [12.0,12.0,0.2]] # 8
+
         # Set spawn positions of the multirotors
-        init_pos_0 = [2.5, 14.0, 0.2]
-        init_pos_1 = [7.0, 10.0, 0.2]
-        init_pos_2 = [3.5, 6.0, 0.2]
+        init_pos_0 = posittion_grid[0]
+        init_pos_1 = posittion_grid[6]
+        init_pos_2 = posittion_grid[8]
+
+        # Auxiliar variable for repeated runs
+        self.save_statistics = False
+        self.runs = 3
+        self.statistics = [f"pso_run_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": False,        # draw the filaments
+                      "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,  # [Hz] update rate of sensor
@@ -118,7 +134,7 @@ class PegasusApp:
         # Create the vehicle 0
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor0 = MultirotorConfig(sensor_configs=sensor_configs)
-        self.controller = NonlinearController(
+        self.controller0 = NonlinearController(
             vehicle_id=0,
             init_pos=init_pos_0,
             env_dict=env_dict,
@@ -126,7 +142,7 @@ class PegasusApp:
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
-        config_multirotor0.backends = [self.controller]
+        config_multirotor0.backends = [self.controller0]
 
         Multirotor(
             "/World/quadrotor1",
@@ -140,7 +156,7 @@ class PegasusApp:
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
-        self.controller = NonlinearController(
+        self.controller1 = NonlinearController(
             vehicle_id=1,
             init_pos=init_pos_1,
             env_dict=env_dict,
@@ -148,7 +164,7 @@ class PegasusApp:
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
-        config_multirotor1.backends = [self.controller]
+        config_multirotor1.backends = [self.controller1]
 
         Multirotor(
             "/World/quadrotor1",
@@ -162,7 +178,7 @@ class PegasusApp:
         # Create the vehicle 2
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor2 = MultirotorConfig(sensor_configs=sensor_configs)
-        self.controller = NonlinearController(
+        self.controller2 = NonlinearController(
             vehicle_id=2,
             init_pos=init_pos_2,
             env_dict=env_dict,
@@ -170,7 +186,7 @@ class PegasusApp:
             Ki=[0.5, 0.5, 0.5],
             Kr=[2.0, 2.0, 2.0]
         )
-        config_multirotor2.backends = [self.controller]
+        config_multirotor2.backends = [self.controller2]
 
         Multirotor(
             "/World/quadrotor1",
@@ -184,13 +200,9 @@ class PegasusApp:
         # Set the camera to a nice position so that we can see the environment
         self.pg.set_viewport_camera([0.5, 0.5, (env_spec["env_max"][2] + 5)], [i*0.5 for i in env_spec["env_max"]])
 
-        # Auxiliar variable for repeated runs
-        self.runs = 1
-        self.statistics = [f"pso_run_{i}" for i in range(self.runs)]
-
         # Set stop condition(s)
-        self.stop_cond = StopCondition(time=150.0,
-                                       source_pos=np.array([5.0, 0.75, 5.0]), # TODO - read source_pos from settingsl, and add 2D setting
+        self.stop_cond = StopCondition(time=300.0,
+                                       source_pos=np.array([5.0, 1.0, 7.5]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=2.0)
         
         # Reset the simulation environment so that all articulations (aka robots) are initialized
@@ -205,22 +217,27 @@ class PegasusApp:
         # Run the simulation again for every statistics file
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
-            self.controller.results_files = self.curr_dir + f"/results/{statistics_file}"
+            if self.save_statistics:
+                self.controller0.results_files = self.curr_dir + f"/results/{statistics_file}"
+                self.controller1.results_files = self.curr_dir + f"/results/{statistics_file}"
+                self.controller2.results_files = self.curr_dir + f"/results/{statistics_file}"
 
             # Start the simulation
             self.timeline.play()
-
-            while not self.stop_cond.get(time_current = self.controller.total_time,
-                                         pos_current = self.controller.p):
-                
+            pos = np.append(self.gsl.swarm_pos_best,[7.5]) # PSO works only in 2D for now
+            
+            while not self.stop_cond.get(time_current = self.controller0.total_time,
+                                         pos_current = pos):
+                pos = np.append(self.gsl.swarm_pos_best,[7.5])
                 # Update the UI of the app and perform the physics step
                 self.world.step(render=True)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
-                self.controller.run_success[0] = True
+                self.controller0.run_success[0] = True
 
             # Stop & Reset the simulation
             self.timeline.stop()
+            self.gsl.reset()
             self.world.reset() # necessary to replicate the 'UI stop button' behaviour
             carb.log_warn(f"Finished run {i+1}/{self.runs}")
         

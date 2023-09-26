@@ -136,7 +136,7 @@ class NonlinearController(Backend):
         """
 
         # Check if we should save the statistics to some file or not
-        if self.results_files != None:        
+        if self.results_files is not None:        
             statistics = {} # TODO - check if skipping the first entry is still necessary
             statistics["time"] = np.array(self.time_vector[1:]) # first datapoint is excluded because it contains data from the previous run
             if self.position_over_time: # check if list contains anything, dirty fix for situation where sim app is stopped twice without playing
@@ -146,12 +146,12 @@ class NonlinearController(Backend):
                 statistics["mox"] = np.vstack(self.mox_raw_over_time[1:])
                 np.savez(self.results_files, **statistics)
                 carb.log_warn("Statistics saved to: " + self.results_files)
-    
-        self.gsl.reset()
-        self.waypoints.set_takeoff()
-
+        
         self.reset_statistics()
+    
         self.reset_controller()
+        self.waypoints.set_takeoff()
+        self.gsl.reset()
 
 
     def update_sensor(self, sensor_type: str, data):

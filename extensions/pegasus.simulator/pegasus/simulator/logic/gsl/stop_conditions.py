@@ -16,7 +16,7 @@ class StopCondition():
         self.type = None
 
 
-    def stop_time_cond(self, time) -> bool:
+    def stop_time_cond(self, time:float) -> bool:
         stop = False
         
         if time > self.stop_time:
@@ -26,7 +26,7 @@ class StopCondition():
         return stop
 
 
-    def stop_distance2src_cond(self, time, pos,) -> bool:
+    def stop_distance2src_cond(self, time:float, pos:np.ndarray) -> bool:
         stop = False
         # if the distance between robot and source is smaller than the stop distance
         # and the time is more than 5 sec, because of a reset bug
@@ -60,7 +60,7 @@ class StopCondition():
             self.type = "time"
             return True
         
-        if self.stop_distance2src is not None and self.stop_distance2src_cond(time_current,pos_current):
+        if self.stop_distance2src is not None and self.stop_distance2src_cond(time_current, pos_current):
             self.type = "dist2src"
             return True 
 
