@@ -44,3 +44,4 @@ log/
 
 # Results
 /examples/results/*
+/examples/utils/plot/figures/*

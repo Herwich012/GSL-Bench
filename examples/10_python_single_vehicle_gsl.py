@@ -83,9 +83,6 @@ class PegasusApp:
 
         # Launch one of the worlds provided AutoGDM2
         self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
-
-        # Get the current directory used to read trajectories and save results
-        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         
         posittion_grid = [[3.0, 3.0, 0.2], # 0
                           [7.5, 3.0, 0.2], # 1 
@@ -101,6 +98,12 @@ class PegasusApp:
         init_pos_1 = posittion_grid[5]
         self.exp_id = '000'
         
+        # Get the current directory used to save results
+        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
+        self.exp_path = self.curr_dir + f"/examples/results/{self.exp_id}/"
+        if not os.path.exists(self.exp_path): # create experiment folder if it does not exist yet
+            os.system(f"mkdir -p {self.exp_path}") 
+
         # Auxiliar variable for repeated runs
         self.save_statistics = False
         self.runs = 10
@@ -166,7 +169,8 @@ class PegasusApp:
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
             if self.save_statistics:
-                self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
+                #self.controller.results_files = self.curr_dir + f"/results/{self.exp_id}/{statistics_file}.npz"
+                self.controller.results_files = self.exp_path + f"/{statistics_file}.npz"
 
             # Start the simulation
             self.timeline.play()

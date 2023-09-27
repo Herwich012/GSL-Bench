@@ -14,12 +14,15 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Save Params & env id ###
 save_plot = False
 filetype = 'png'
-env = 3
-save_fname = f"{HOME_DIR}/0THESIS/figures/success_{str(env).zfill(3)}.{filetype}"
+env_id = 3
+save_fname = f"{PLOT_DIR}/success_{str(env_id).zfill(3)}.{filetype}"
 
 ### Data selection ###
 exp_id_starts = [82, 100, 91]
@@ -43,7 +46,9 @@ fig.set_figwidth(5)
 #-------------------------
 # Plot Occupancy
 #-------------------------
-occ_data_file = f"{HOME_DIR}/0THESIS/environments/003-004/occupancy/wh_simple_0000_grid.npy" # occ data file
+# TODO: automate occupancy file selection
+# occ_data_file = f"{HOME_DIR}/0THESIS/environments/003-004/occupancy/wh_simple_0000_grid.npy" # occ data file
+occ_data_file = f"{HOME_DIR}/0THESIS/environments/006/occupancy/wh_complex_0010_grid.npy" # occ data file
 z_idx = math.ceil((height)/0.2)
 occmap = np.transpose(np.load(occ_data_file)[z_idx])[2:-1,2:-1]
 plt.imshow(occmap, vmin=0, vmax=1, origin='lower', interpolation='none', cmap='binary', extent=(0.,15.,0.,15.), alpha=1)
@@ -52,7 +57,7 @@ plt.draw()
 #-------------------------
 # Plot Gas
 #-------------------------
-with np.load(f'ppm_env_{str(env).zfill(3)}.npz') as data:
+with np.load(f'./ppm_data/ppm_env_{str(env_id).zfill(3)}.npz') as data:
     ppm = data['arr_0']
 
 im = ax.imshow(np.flip(np.transpose(ppm[:,:,(int(4*height) - 1)]),axis=0), cmap='gray_r', extent=(0.,15.,0.,15.), alpha=0.8)
@@ -64,7 +69,7 @@ cbar.ax.set_ylabel("ppm", rotation=-90, va="bottom")
 # Start postitions and source loc
 #-------------------------
 plt.scatter(posittion_grid[:,0], posittion_grid[:,1], c='r', marker='^', label='start', zorder=3.5)
-if (env%2) == 0:
+if (env_id%2) == 0:
     plt.scatter([1.], [10.], c='g', label='source', zorder=3.5)
 else:
     plt.scatter([5.], [1.], c='g', label='source', zorder=3.5)
@@ -81,8 +86,9 @@ for h,(start,annotation) in enumerate(zip(exp_id_starts,annotations)):
     succtest = np.zeros((runs_per_exp,10))
 
     for j,exp_id in enumerate(experiments):
-        stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-        files = glob.glob(f"{stat_dir}/*")
+        # stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
+        # files = glob.glob(f"{stat_dir}/*")
+        files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
         files_sorted = [files[i] for i in np.argsort(files)]
         
         for k,file in enumerate(files_sorted):
@@ -105,7 +111,7 @@ for h,(start,annotation) in enumerate(zip(exp_id_starts,annotations)):
                    #xy=(posittion_grid[i,0] - 0.7, posittion_grid[i,1] - 1.0 - (h*0.6))) # bottom
 
 
-plt.title(f'Success Rates Per Location - Environment {env}')
+plt.title(f'Success Rates Per Location - Environment {env_id}')
 plt.axis('scaled')
 plt.grid()
 plt.xlabel('x [m]')

@@ -10,7 +10,7 @@ import sys # get exp id and init pos
 argv = sys.argv
 argv = argv[argv.index("--") + 1:] # get all the args after " -- "
 exp_id = argv[0]    # experiment id
-exp_pos = argv[1]  # initial posisiton
+exp_pos = argv[1]   # initial posisiton
 
 import yaml
 import numpy as np
@@ -99,7 +99,7 @@ class PegasusApp:
         init_pos_1 = pos
         
         # Auxiliar variable for repeated runs
-        self.save_statistics = False
+        self.save_statistics = True
         self.runs = 10
         self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
 
@@ -162,8 +162,8 @@ class PegasusApp:
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
             if self.save_statistics:
-                #self.controller.results_files = self.curr_dir + f"/results/{statistics_file}.npz"
-                self.controller.results_files = f"/home/hajo/0THESIS/experiments/{self.exp_id}/{statistics_file}.npz"
+                self.controller.results_files = self.curr_dir + f"/results/{self.exp_id}/{statistics_file}.npz"
+                #self.controller.results_files = f"/home/hajo/0THESIS/experiments/{self.exp_id}/{statistics_file}.npz"
 
             # Start the simulation
             self.timeline.play()

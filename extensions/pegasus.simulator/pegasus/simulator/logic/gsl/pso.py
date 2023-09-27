@@ -94,6 +94,7 @@ class PSO(GSL):
         self.gas_sensor_prev[id] = gas_sensor
         return wp
 
+
     def reset(self):
         self.pos = np.zeros((self.particles,2)) # particle's positions in XY
         self.pos_best = self.pos # particle's best known positions

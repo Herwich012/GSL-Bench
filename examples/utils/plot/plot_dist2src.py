@@ -13,18 +13,22 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Experiment id & Save params ###
-exp_id = 108
+exp_id = 190
+stop_time = 300
 save_plot = False
 filetype = 'png'
-save_fname = f"{HOME_DIR}/0THESIS/figures/dist2src_{str(exp_id).zfill(3)}.{filetype}"
+save_fname = f"{PLOT_DIR}/dist2src_{str(exp_id).zfill(3)}.{filetype}"
 
 ### Source location ###
-source_xy = np.array([5,1])
+source_xy = np.array([1,10])
 
-stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-files = glob.glob(f"{stat_dir}/*")
+### Files ###
+files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
 files_sorted = [files[i] for i in np.argsort(files)]
 
 #-------------------------
@@ -56,8 +60,9 @@ avg_time = round(np.mean(times),1)
 ax.set_xlim(0,None)
 ax.set_ylabel('Distance To Source (m)')
 ax.set_ylim(1, None)
-ax.annotate(f'avg: {avg_time}s', xy=(avg_time + 5, 12.8)) # bottom
-plt.axvline(avg_time, linestyle='--')
+if avg_time < (stop_time-2):
+    ax.annotate(f'avg: {avg_time}s', xy=(avg_time + 5, 12.8)) # bottom
+    plt.axvline(avg_time, linestyle='--')
 plt.xlabel('Time (s)')
 plt.grid()
 plt.title('Dung Beetle Algotirhm - Distance to Source')

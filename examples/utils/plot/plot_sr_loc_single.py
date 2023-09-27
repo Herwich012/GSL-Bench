@@ -3,23 +3,30 @@ import glob
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-# plt.rcParams["font.family"] = "serif"
-#plt.rcParams["font.serif"] = ["Times New Roman"]
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
-
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
+
+
 exp_id_start = 37
 amount = 9
 save_plot = False
-save_fname = f"{HOME_DIR}/0THESIS/figures/success_{exp_id_start}.pdf"
+filetype = 'pdf'
+save_fname = f"{PLOT_DIR}/success_{exp_id_start}.{filetype}"
 
 experiments = [str(i + exp_id_start).zfill(3) for i in range(amount)]
 success = []
 succtest = np.zeros((amount,10))
 
 for j,exp_id in enumerate(experiments):
-    stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-    files = glob.glob(f"{stat_dir}/*")
+    # stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
+    # files = glob.glob(f"{stat_dir}/*")
+    files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
     files_sorted = [files[i] for i in np.argsort(files)]
     
     for k,file in enumerate(files_sorted):
@@ -49,7 +56,7 @@ fig.set_figheight(4)
 fig.set_figwidth(5)
 
 
-with np.load('ppm_env_002.npz') as data:
+with np.load('ppm_env_002.npz') as data: # TODO: add env selection
     ppm = data['arr_0']
 
 im = ax.imshow(np.flip(np.transpose(ppm[:,:,15]),axis=0), cmap='gray_r', extent=(0.,15.,0.,15.))
@@ -73,5 +80,5 @@ plt.legend(loc='lower left')
 fig.tight_layout()
 
 if save_plot:
-    plt.savefig(str(save_fname), format='pdf', bbox_inches='tight')
+    plt.savefig(str(save_fname), format=filetype, bbox_inches='tight')
 plt.show()

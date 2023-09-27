@@ -14,32 +14,38 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR =    f"{PEGASUS_DIR}/examples/utils/plot"
 
-### Save Params & env id ###
-exp_id = 100
-save_plot = False
+### Save Params ###
+exp_id = 172
+save_plot = True
 filetype = 'png'
-
+env_id = 6
 multiple = True  # create multiple plots from multiple experiments
 exp_amount = 9 # amount of experiments
 
-
 def plot_pos(exp_id:str,
              env:int,
-             save_plot:bool=False,
-             height:float=4.0,
-             plot_occ:bool=True,
-             filetype:str='pdf') -> None :
+             save:bool = False,
+             height:float   = 4.0,
+             plot_occ:bool  = True,
+             filetype:str   = 'pdf'
+             ) -> None :
    
-    save_fname = f"{HOME_DIR}/0THESIS/figures/pos/beetle/pos_{exp_id}.{filetype}"
-    stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-    files = glob.glob(f"{stat_dir}/*")
+    save_fname = f"{PLOT_DIR}/figures/pos_{exp_id}.{filetype}"
+    # stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
+    # files = glob.glob(f"{stat_dir}/*")
     # sub_id = 2
     # save_fname = f"{HOME_DIR}/0THESIS/video/pos/beetle/pos_{exp_id}_{sub_id}.{filetype}"
     # stat_dir = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator/examples/results/video"
     # files = glob.glob(f"{stat_dir}/200_beetle_{sub_id}*")
+    
+    files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
     files_sorted = [files[i] for i in np.argsort(files)]
     print(files_sorted)
+    
     #-------------------------
     # Ground track plot
     #-------------------------
@@ -48,7 +54,7 @@ def plot_pos(exp_id:str,
     fig.set_figheight(4)
     fig.set_figwidth(5)
 
-    for __import__,file in enumerate(files_sorted):
+    for _,file in enumerate(files_sorted):
 
         with np.load(file) as data:
             locs = data['p']
@@ -63,8 +69,9 @@ def plot_pos(exp_id:str,
     #-------------------------
     alpha_gas = 1
     if plot_occ:
-        alpha_gas = 0.8
-        occ_data_file = f"{HOME_DIR}/0THESIS/environments/003-004/occupancy/wh_simple_0000_grid.npy" # occ data file
+        alpha_gas = 0.8 # TODO: automate occupancy file selection
+        # occ_data_file = f"{HOME_DIR}/0THESIS/environments/003-004/occupancy/wh_simple_0000_grid.npy" # occ data file
+        occ_data_file = f"{HOME_DIR}/0THESIS/environments/006/occupancy/wh_complex_0010_grid.npy" # occ data file
         z_idx = math.ceil((height)/0.2)
         occmap = np.transpose(np.load(occ_data_file)[z_idx])[2:-1,2:-1]
         plt.imshow(occmap, vmin=0, vmax=1, origin='lower', interpolation='none', cmap='binary', extent=(0.,15.,0.,15.), alpha=1)
@@ -73,7 +80,7 @@ def plot_pos(exp_id:str,
     #-------------------------
     # Plot Gas
     #-------------------------
-    with np.load(f'ppm_env_{str(env).zfill(3)}.npz') as data:
+    with np.load(f'{PLOT_DIR}/ppm_data/ppm_env_{str(env).zfill(3)}.npz') as data:
         ppm = data['arr_0']
 
     im = ax.imshow(np.flip(np.transpose(ppm[:,:,(int(4*height) - 1)]),axis=0), cmap='gray_r', extent=(0.,15.,0.,15.), alpha=alpha_gas)
@@ -96,7 +103,6 @@ def plot_pos(exp_id:str,
     ax.annotate('inlet', xy=(0.5, 2))
     ax.annotate('outlet', xy=(12.8, 13.5))
 
-
     #plt.title(f'Dung Beetle Algorithm - Experiment {exp_id}')
     plt.title(f'Dung Beetle Algorithm - Ground Track')
     plt.axis('scaled')
@@ -111,7 +117,7 @@ def plot_pos(exp_id:str,
     
     fig.tight_layout()
 
-    if save_plot:
+    if save:
         plt.savefig(str(save_fname), format=filetype, bbox_inches='tight')
     else:
         plt.show()
@@ -124,13 +130,14 @@ def plot_multiple(start:int, env:int, amount:int=9, save:bool=False, filetype:st
     if env <= 2: occ = False
     
     for exp in experiments:
-        plot_pos(exp, env=env, save_plot=save, plot_occ=occ, filetype=filetype)
+        plot_pos(exp, env=env, save=save, plot_occ=occ, filetype=filetype)
+
 
 if multiple:
     plot_multiple(exp_id,
-                env=3,
+                env=env_id,
                 amount=exp_amount,
                 save=save_plot,
                 filetype=filetype) # if not showing, then saving
 else:
-    plot_pos(exp_id, env=3, save_plot=True, filetype=filetype)
+    plot_pos(exp_id, env=env_id, save=save_plot, filetype=filetype)

@@ -13,11 +13,14 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Save params ###
 save_plot = False
 filetype = 'png'
-save_fname = f"{HOME_DIR}/0THESIS/figures/success_overall.{filetype}"
+save_fname = f"{PLOT_DIR}/success_overall.{filetype}"
 
 ### Data selection ###
 algorithms = ("E. Coli", "Dung Beetle", "Random Walker")
@@ -27,7 +30,7 @@ exp_id_starts = [[ 10,  19,  28], # env 001
                  [ 82, 100,  91], # ...
                  [109, 127, 118],
                  [136, 154, 145],
-                 [163, 181, 172]]
+                 [190, 181, 172]]
 runs_per_exp = 9 # amount of runs in one experiment
 
 def get_sr(start:int) -> list:
@@ -35,8 +38,9 @@ def get_sr(start:int) -> list:
     success = []
 
     for _,exp_id in enumerate(experiments):
-        stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-        files = glob.glob(f"{stat_dir}/*")
+        # stat_dir = f"{RESULTS_DIR}/{exp_id}"
+        # files = glob.glob(f"{stat_dir}/*")
+        files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
         files_sorted = [files[i] for i in np.argsort(files)]
         
         for k,file in enumerate(files_sorted):

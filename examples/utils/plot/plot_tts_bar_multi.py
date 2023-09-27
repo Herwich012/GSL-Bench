@@ -14,8 +14,17 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams["font.family"] = "Times New Roman"
-
 HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
+
+### Save params ###
+save_plot = False
+filetype = 'png'
+save_fname = f"{HOME_DIR}/0THESIS/figures/avg_tts.{filetype}"
+
+### Data selection ###
 algorithms = ("E. Coli", "Dung Beetle", "Random Walker")
 environments = ("1", "2", "3", "4", "5", "6")
 exp_id_starts = [[ 10,  19,  28], # env 001
@@ -25,9 +34,6 @@ exp_id_starts = [[ 10,  19,  28], # env 001
                  [136, 154, 145],
                  [163, 181, 172]]
 amount = 9
-save_plot = True
-filetype = 'png'
-save_fname = f"{HOME_DIR}/0THESIS/figures/avg_tts.{filetype}"
 
 
 def get_times2source(start:int) -> list:
@@ -35,8 +41,9 @@ def get_times2source(start:int) -> list:
     times2source = []
 
     for _,exp_id in enumerate(experiments):
-        stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-        files = glob.glob(f"{stat_dir}/*")
+        # stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
+        # files = glob.glob(f"{stat_dir}/*")
+        files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
         files_sorted = [files[i] for i in np.argsort(files)]
         
         for _,file in enumerate(files_sorted):

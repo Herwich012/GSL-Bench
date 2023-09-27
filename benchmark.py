@@ -1,5 +1,8 @@
 import os
+from pathlib import Path
 from datetime import datetime
+HOME_DIR = Path.home()
+PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
 
 def multiple_exp(main_commands, start_ids): # multiple experiments
     for command,id in zip(main_commands,start_ids):
@@ -23,7 +26,7 @@ def grid_exp(command, id): # grid experiment
     start = datetime.now()
 
     for _,(id,pos) in enumerate(zip(experiment_ids,posittions)):
-        exp_path = f"/home/hajo/0THESIS/experiments/{id}/"
+        exp_path = f"{PEGASUS_DIR}/examples/results/{id}/"
         
         if not os.path.exists(exp_path): # create experiment folder if it does not exist yet
             os.system(f"mkdir -p {exp_path}") 
@@ -35,7 +38,7 @@ def grid_exp(command, id): # grid experiment
 
 
 if __name__ == "__main__":
-    ISAACSIM_PYTHON = '/home/hajo/.local/share/ov/pkg/isaac_sim-2022.2.0/python.sh'
+    ISAACSIM_PYTHON = f'{HOME_DIR}/.local/share/ov/pkg/isaac_sim-2022.2.0/python.sh'
     main_commands = [f'{ISAACSIM_PYTHON} examples/12_python_single_vehicle_gsl_benchmark.py',
                      f'{ISAACSIM_PYTHON} examples/12_python_single_vehicle_gsl_benchmark1.py']
     start_ids = [190]
