@@ -1,5 +1,7 @@
 """
-Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| utils.py
+| Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| Description: utilities for the a-star algorithm
 """
 import math
 import numpy as np
@@ -22,6 +24,8 @@ def dist2d(point1, point2):
 
 
 def expand_boundaries(arr:np.ndarray, exp:float, cell_size:float) -> np.ndarray:
+    # expand the size of obstacles in the occupancygrid with
+    # the given distance
     arr_exp = np.copy(arr)
     exp_ops = math.ceil(exp/cell_size)
 
@@ -42,11 +46,11 @@ def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) 
     end_idx = len(corner_idx) - 1
     short_idx = [0]
 
-    while idx < (end_idx - 1):
+    while idx < (end_idx - 1): # while not at the second to last waypoint of a-star
         shortened = False
         check_idx = end_idx
 
-        while check_idx != (idx + 1):
+        while check_idx != (idx + 1): # while the check waypoint is not the immidiate next waypiont
             if check_env_for_obstacle2D(env_spec, grid,
                                       np.array([path_loc[corner_idx[idx]][0],path_loc[corner_idx[idx]][1]]),
                                       np.array([path_loc[corner_idx[check_idx]][0],path_loc[corner_idx[check_idx]][1]])):
@@ -67,8 +71,8 @@ def shortcut_path(env_spec:dict, grid:np.ndarray, path_loc:list, path_idx:list) 
     return short_idx
                                       
 
-
 def find_path_corner_idx(path:list) -> list:
+    # find the corners in a generated a-star path
     corner_idx = [0]
     idx = 0
     if path[0][0] == path[1][0]:

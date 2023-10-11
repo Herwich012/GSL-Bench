@@ -1,5 +1,7 @@
 """
-Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| a_star.py
+| Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| Description: Implementation of a 2D a-star algorithm
 """
 import math
 from heapq import heappush, heappop

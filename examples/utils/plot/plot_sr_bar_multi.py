@@ -19,7 +19,7 @@ PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Save params ###
 save_plot = False
-filetype = 'png'
+filetype = 'pdf'
 save_fname = f"{PLOT_DIR}/success_overall.{filetype}"
 
 ### Data selection ###
@@ -30,7 +30,7 @@ exp_id_starts = [[ 10,  19,  28], # env 001
                  [ 82, 100,  91], # ...
                  [109, 127, 118],
                  [136, 154, 145],
-                 [190, 181, 172]]
+                 [199, 181, 172]]
 runs_per_exp = 9 # amount of runs in one experiment
 
 def get_sr(start:int) -> list:

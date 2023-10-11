@@ -21,8 +21,8 @@ PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Save params ###
 save_plot = False
-filetype = 'png'
-save_fname = f"{HOME_DIR}/0THESIS/figures/avg_tts.{filetype}"
+filetype = 'pdf'
+save_fname = f"{PLOT_DIR}/avg_tts.{filetype}"
 
 ### Data selection ###
 algorithms = ("E. Coli", "Dung Beetle", "Random Walker")
@@ -32,7 +32,7 @@ exp_id_starts = [[ 10,  19,  28], # env 001
                  [ 82, 100,  91], # ...
                  [109, 127, 118],
                  [136, 154, 145],
-                 [163, 181, 172]]
+                 [199, 181, 172]]
 amount = 9
 
 

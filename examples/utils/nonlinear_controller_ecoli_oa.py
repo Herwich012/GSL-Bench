@@ -147,11 +147,10 @@ class NonlinearController(Backend):
                 np.savez(self.results_files, **statistics)
                 carb.log_warn("Statistics saved to: " + self.results_files)
         
-        self.reset_statistics()
-    
-        self.reset_controller()
-        self.waypoints.set_takeoff()
         self.gsl.reset()
+        self.waypoints.set_takeoff()
+        self.reset_statistics()
+        self.reset_controller()
 
 
     def update_sensor(self, sensor_type: str, data):

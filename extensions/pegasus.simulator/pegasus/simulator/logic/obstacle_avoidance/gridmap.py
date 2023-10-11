@@ -1,5 +1,7 @@
 """
-Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| gridmap.py
+| Taken from (https://github.com/richardos/occupancy-grid-a-star.git)
+| Description: OccupancyGridmap class used for the 2D a-star algorithm
 """
 __all__ = ["OccupancyGridMap"]
 import math

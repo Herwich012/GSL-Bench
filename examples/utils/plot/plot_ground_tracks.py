@@ -19,8 +19,8 @@ RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
 PLOT_DIR =    f"{PEGASUS_DIR}/examples/utils/plot"
 
 ### Save Params ###
-exp_id = 172
-save_plot = True
+exp_id = 199
+save_plot = False
 filetype = 'png'
 env_id = 6
 multiple = True  # create multiple plots from multiple experiments
@@ -104,7 +104,7 @@ def plot_pos(exp_id:str,
     ax.annotate('outlet', xy=(12.8, 13.5))
 
     #plt.title(f'Dung Beetle Algorithm - Experiment {exp_id}')
-    plt.title(f'Dung Beetle Algorithm - Ground Track')
+    plt.title(f'E. Coli Algorithm - Ground Track')
     plt.axis('scaled')
     plt.grid()
     plt.xlabel('x [m]')

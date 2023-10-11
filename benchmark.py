@@ -41,6 +41,6 @@ if __name__ == "__main__":
     ISAACSIM_PYTHON = f'{HOME_DIR}/.local/share/ov/pkg/isaac_sim-2022.2.0/python.sh'
     main_commands = [f'{ISAACSIM_PYTHON} examples/12_python_single_vehicle_gsl_benchmark.py',
                      f'{ISAACSIM_PYTHON} examples/12_python_single_vehicle_gsl_benchmark1.py']
-    start_ids = [190]
+    start_ids = [199]
     
     grid_exp(main_commands[0],start_ids[0])
