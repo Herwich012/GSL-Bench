@@ -9,3 +9,4 @@ from .ecoli import E_Coli
 from .dungbeetle1 import DungBeetle1
 from .dungbeetle2 import DungBeetle2
 from .pso import PSO
+from .sniffybug import SniffyBug

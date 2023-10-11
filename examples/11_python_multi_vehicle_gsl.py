@@ -16,7 +16,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": False})
+simulation_app = SimulationApp({"headless": True})
 
 # -----------------------------------
 # The actual script should start here
@@ -34,6 +34,7 @@ from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 # from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController
 from examples.utils.nonlinear_controller_multi_oa import NonlinearController
 from pegasus.simulator.logic.gsl.pso import PSO
+from pegasus.simulator.logic.gsl.sniffybug import SniffyBug
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -57,7 +58,7 @@ class PegasusApp:
         
         # Point to the generated environment(s)
         AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_simple'
+        env_type = 'wh_empty'
         env_id = 0
         env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
@@ -102,12 +103,12 @@ class PegasusApp:
 
         # Set spawn positions of the multirotors
         init_pos_0 = posittion_grid[0]
-        init_pos_1 = posittion_grid[6]
+        init_pos_1 = posittion_grid[4]
         init_pos_2 = posittion_grid[8]
 
         # Auxiliar variable for repeated runs
-        self.save_statistics = False
-        self.runs = 3
+        self.save_statistics = True
+        self.runs = 10
         self.statistics = [f"pso_run_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
@@ -129,8 +130,12 @@ class PegasusApp:
                           'anemometer': anemo_config}
 
         # Create instance of multi vehicle algorithm 
-        self.gsl = PSO(env_dict, particles=3)
+        self.gsl = SniffyBug(env_dict,
+                       particles=3,
+                       cognitive_coeff=-0.333, # sniffybug evolved parameters
+                       social_coeff=1.856)
 
+        # TODO: create multirotors iteratively
         # Create the vehicle 0
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor0 = MultirotorConfig(sensor_configs=sensor_configs)
@@ -202,8 +207,8 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([5.0, 1.0, 7.5]), # TODO - read source_pos from settingsl, and add 2D setting
-                                       distance2src=2.0)
+                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       distance2src=1.0)
         
         # Reset the simulation environment so that all articulations (aka robots) are initialized
         self.world.reset()
@@ -218,19 +223,19 @@ class PegasusApp:
         for i,statistics_file in enumerate(self.statistics):
             # Set the results file
             if self.save_statistics:
-                self.controller0.results_files = self.curr_dir + f"/results/{statistics_file}"
-                self.controller1.results_files = self.curr_dir + f"/results/{statistics_file}"
-                self.controller2.results_files = self.curr_dir + f"/results/{statistics_file}"
+                self.controller0.results_files = self.curr_dir + f"/results/pso/{statistics_file}"
+                self.controller1.results_files = self.curr_dir + f"/results/pso/{statistics_file}"
+                self.controller2.results_files = self.curr_dir + f"/results/pso/{statistics_file}"
 
             # Start the simulation
             self.timeline.play()
-            pos = np.append(self.gsl.swarm_pos_best,[7.5]) # PSO works only in 2D for now
+            pos = np.append(self.gsl.swarm_pos_best,[4.0]) # PSO works only in 2D for now
             
             while not self.stop_cond.get(time_current = self.controller0.total_time,
                                          pos_current = pos):
-                pos = np.append(self.gsl.swarm_pos_best,[7.5])
+                pos = np.append(self.gsl.swarm_pos_best,[4.0])
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=True)
+                self.world.step(render=False)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller0.run_success[0] = True
