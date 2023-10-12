@@ -16,6 +16,7 @@ plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
 RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+ENVS_DIR =    f"{PEGASUS_DIR}/examples/environments"
 PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 
 ### Save Params & env id ###

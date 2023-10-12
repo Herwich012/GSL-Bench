@@ -11,6 +11,7 @@ from omni.isaac.debug_draw import _debug_draw # for plotting the filaments
 import os
 import re
 import math
+import glob
 import numpy as np
 from typing import Tuple
 from pegasus.simulator.logic.state import State
@@ -54,9 +55,10 @@ class MOX(Sensor):
         
         # TODO - put all filament iterations into one array
         # Location of the gas data
-        self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
+        # self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
+        self._env_dir = config["env_dict"].get("env_dir", "/home/user/Omniverse_extensions/PegasusSimulator/examples/environments/001/")
         self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
-        self._gas_data_dir = f"{self._AutoGDM2_dir}environments/gas_data/{self._env_name}/"
+        self._gas_data_dir = glob.glob(f"{self._env_dir}gas_data/*/")[0]
         self._gas_data_files = os.listdir(self._gas_data_dir)
 
         # Environment specification
@@ -66,7 +68,7 @@ class MOX(Sensor):
                                                  "cell_size": 0.2})
         
         # Load occupancy grid
-        self._occ_grid = np.load(f"{self._AutoGDM2_dir}environments/occupancy/{self._env_name}_grid.npy") # occ data file)
+        self._occ_grid = np.load(glob.glob(f"{self._env_dir}occupancy/*grid.npy")[0]) # occ data file
         
         # Gas data selection (iterations)
         self._iter_start = config.get("gas_data_start_iter", 0)

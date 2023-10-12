@@ -6,6 +6,7 @@
 | Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
 """
 import yaml
+import glob
 import numpy as np
 from datetime import datetime
 
@@ -30,8 +31,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-# from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -46,28 +47,27 @@ class PegasusApp:
     """
     A Template class that serves as an example on how to build a simple Isaac Sim standalone App.
     """
-
     def __init__(self):
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
         self.start_time = datetime.now() # For timing the runs afterwards
+        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get the current directory
         
-        # Point to the generated environment(s)
-        AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_complex'
-        env_id = 10
-        env_name = f'{env_type}_{str(env_id).zfill(4)}'
+        # Select the environment id
+        env_id = 6
+        self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
-        with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        # with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        with open(glob.glob(f"{self.env_dir}occupancy/*head.txt")[0], 'r') as file:
             env_spec = yaml.safe_load(file)
 
         # Combine environment info into env_dict
-        env_dict = {"AutoGDM2_dir": AutoGDM2_dir,
-                    "env_type": env_type,
+        env_dict = {"env_dir": self.env_dir,
+                    #"env_type": env_type,
                     "env_id": env_id,
-                    "env_name": env_name,
+                    #"env_name": env_name,
                     "env_spec": env_spec}
 
         # Acquire the timeline thatfwill be used to start/stop the simulation
@@ -82,7 +82,8 @@ class PegasusApp:
         self.world = self.pg.world
 
         # Launch one of the worlds provided AutoGDM2
-        self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
+        # self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
+        self.pg.load_environment(glob.glob(f"{self.env_dir}usd/*.usd")[0])
         
         posittion_grid = [[3.0, 3.0, 0.2], # 0
                           [7.5, 3.0, 0.2], # 1 
@@ -98,8 +99,6 @@ class PegasusApp:
         init_pos_1 = posittion_grid[5]
         self.exp_id = '000'
         
-        # Get the current directory used to save results
-        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
         self.exp_path = self.curr_dir + f"/examples/results/{self.exp_id}/"
         if not os.path.exists(self.exp_path): # create experiment folder if it does not exist yet
             os.system(f"mkdir -p {self.exp_path}") 
@@ -107,7 +106,7 @@ class PegasusApp:
         # Auxiliar variable for repeated runs
         self.save_statistics = False
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_beetle_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,

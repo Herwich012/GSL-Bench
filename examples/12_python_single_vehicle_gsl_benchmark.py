@@ -10,9 +10,11 @@ import sys # get exp id and init pos
 argv = sys.argv
 argv = argv[argv.index("--") + 1:] # get all the args after " -- "
 exp_id = argv[0]    # experiment id
-exp_pos = argv[1]   # initial posisiton
+env_id = argv[1]    # environment id
+exp_pos = argv[2]   # initial posisiton
 
 import yaml
+import glob
 import numpy as np
 from datetime import datetime
 
@@ -23,7 +25,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": True})
+simulation_app = SimulationApp({"headless": False})
 
 # -----------------------------------
 # The actual script should start here
@@ -54,27 +56,32 @@ class PegasusApp:
     A Template class that serves as an example on how to build a simple Isaac Sim standalone App.
     """
 
-    def __init__(self, id:str, pos:list):
+    def __init__(self, id:str, env_id:int, pos:list):
         """
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
         self.start_time = datetime.now() # For timing the runs afterwards
-        
+        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
+              
         # Point to the generated environment(s)
-        AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_complex'
-        env_id = 10
-        env_name = f'{env_type}_{str(env_id).zfill(4)}'
+        # AutoGDM2_dir = '/home/hajo/AutoGDM2/'
+        # env_type = 'wh_complex'
+        # env_id = 10
+        # env_name = f'{env_type}_{str(env_id).zfill(4)}'
+
+        # Select the environment directory
+        self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
-        with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        # with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        with open(glob.glob(f"{self.env_dir}occupancy/*head.txt")[0], 'r') as file:
             env_spec = yaml.safe_load(file)
 
         # Combine environment info into env_dict
-        env_dict = {"AutoGDM2_dir": AutoGDM2_dir,
-                    "env_type": env_type,
+        env_dict = {"env_dir": self.env_dir,
+                    #"env_type": env_type,
                     "env_id": env_id,
-                    "env_name": env_name,
+                    #"env_name": env_name,
                     "env_spec": env_spec}
 
         # Acquire the timeline thatfwill be used to start/stop the simulation
@@ -89,23 +96,21 @@ class PegasusApp:
         self.world = self.pg.world
 
         # Launch one of the worlds provided AutoGDM2
-        self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
-
-        # Get the current directory used to read trajectories and save results
-        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
+        #self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
+        self.pg.load_environment(glob.glob(f"{self.env_dir}usd/*.usd")[0])
         
         # Set spawn position of the multirotor and experiment ID ##################################################
         self.exp_id = id
         init_pos_1 = pos
         
         # Auxiliar variable for repeated runs
-        self.save_statistics = True
+        self.save_statistics = False
         self.runs = 10
         self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": False,        # draw the filaments
+                      "draw": True,        # draw the filaments
                       "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,  # [Hz] update rate of sensor
@@ -171,7 +176,7 @@ class PegasusApp:
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=False)
+                self.world.step(render=True)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller.run_success[0] = True
@@ -189,7 +194,7 @@ class PegasusApp:
 
 def main():
     # Instantiate the template app with experiment id and position
-    pg_app = PegasusApp(id=exp_id, pos=ast.literal_eval(exp_pos))
+    pg_app = PegasusApp(id=exp_id, env_id=env_id, pos=ast.literal_eval(exp_pos))
 
     # Run the application loop
     pg_app.run()

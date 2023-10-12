@@ -6,6 +6,7 @@
 | Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
 """
 import yaml
+import glob
 import numpy as np
 from datetime import datetime
 
@@ -16,7 +17,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": True})
+simulation_app = SimulationApp({"headless": False})
 
 # -----------------------------------
 # The actual script should start here
@@ -55,23 +56,28 @@ class PegasusApp:
         Method that initializes the PegasusApp and is used to setup the simulation environment.
         """
         self.start_time = datetime.now() # For timing the runs afterwards
+        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
         
         # Point to the generated environment(s)
-        AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        env_type = 'wh_empty'
-        env_id = 0
-        env_name = f'{env_type}_{str(env_id).zfill(4)}'
+        # AutoGDM2_dir = '/home/hajo/AutoGDM2/'
+        # env_type = 'wh_empty'
+        # env_id = 1
+        # env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
+        # Select the environment id
+        env_id = 6
+        self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
-        with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        # with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
+        with open(glob.glob(f"{self.env_dir}occupancy/*head.txt")[0], 'r') as file:
             env_spec = yaml.safe_load(file)
 
         # Combine environment info into env_dict
-        env_dict = {"AutoGDM2_dir": AutoGDM2_dir,
-                    "env_type": env_type,
+        env_dict = {"env_dir": self.env_dir,
+                    #"env_type": env_type,
                     "env_id": env_id,
-                    "env_name": env_name,
+                    #"env_name": env_name,
                     "env_spec": env_spec}
 
         # Acquire the timeline thatfwill be used to start/stop the simulation
@@ -86,10 +92,8 @@ class PegasusApp:
         self.world = self.pg.world
 
         # Launch one of the worlds provided AutoGDM2
-        self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
-
-        # Get the current directory used to read trajectories and save results
-        self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve())
+        #self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
+        self.pg.load_environment(glob.glob(f"{self.env_dir}usd/*.usd")[0])
 
         posittion_grid = [[3.0, 3.0, 0.2], # 0
                           [7.5, 3.0, 0.2], # 1 
@@ -235,7 +239,7 @@ class PegasusApp:
                                          pos_current = pos):
                 pos = np.append(self.gsl.swarm_pos_best,[4.0])
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=False)
+                self.world.step(render=True)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller0.run_success[0] = True

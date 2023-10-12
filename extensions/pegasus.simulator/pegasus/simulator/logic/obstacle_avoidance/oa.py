@@ -9,6 +9,7 @@ __all__ = ["ObstacleAvoidance"]
 
 import carb
 import math
+import glob
 import numpy as np
 from pegasus.simulator.logic.obstacle_avoidance.gridmap import OccupancyGridMap
 from pegasus.simulator.logic.obstacle_avoidance.a_star import a_star
@@ -36,7 +37,7 @@ class ObstacleAvoidance:
         self._altitude = altitude # [m]
         self._bounds_expansion = expand # [m]
 
-        occ_data_file = f"{self._env_dict['AutoGDM2_dir']}environments/occupancy/{self._env_dict['env_name']}_grid.npy" # occ data file
+        occ_data_file = glob.glob(f"{self._env_dict['env_dir']}occupancy/*grid.npy")[0] # occ data file
         z_idx = math.ceil((self._altitude-self._env_spec["env_min"][2])/self._env_spec["cell_size"])
 
         occ_data_array = np.transpose(np.load(occ_data_file)[z_idx]) # transpose to correct XY orientation

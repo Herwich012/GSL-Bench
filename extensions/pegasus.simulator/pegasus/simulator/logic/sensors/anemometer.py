@@ -7,6 +7,7 @@
 __all__ = ["Anemometer"]
 
 import carb
+import glob
 import math
 import numpy as np
 from typing import Tuple
@@ -43,9 +44,9 @@ class Anemometer(Sensor):
         super().__init__(sensor_type="Anemometer", update_rate=config.get("update_rate", 4.0))
         
         # Location of the wind data
-        self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
-        self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
-        self._wind_data_file = f"{self._AutoGDM2_dir}environments/wind_data/{self._env_name}.npy"
+        self._env_dir = config["env_dict"].get("env_dir", "/home/user/Omniverse_extensions/PegasusSimulator/examples/environments/001/")
+        #self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
+        self._wind_data_file = glob.glob(f"{self._env_dir}wind_data/*.npy")[0]
         self._wind_data = np.load(self._wind_data_file)
 
         # Environment specification

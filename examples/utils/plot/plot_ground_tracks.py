@@ -1,5 +1,5 @@
 """
-| plot_pos_simple_wh.py
+| plot_ground_tracks.py
 | Author: Hajo Erwich (hajo_erwich@live.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: Create map plot of ground tracks from one experiment (save multiple at once)
@@ -16,12 +16,13 @@ plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
 RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
+ENVS_DIR =    f"{PEGASUS_DIR}/examples/environments"
 PLOT_DIR =    f"{PEGASUS_DIR}/examples/utils/plot"
 
 ### Save Params ###
 exp_id = 199
 save_plot = False
-filetype = 'png'
+filetype = 'pdf'
 env_id = 6
 multiple = True  # create multiple plots from multiple experiments
 exp_amount = 9 # amount of experiments
@@ -35,12 +36,6 @@ def plot_pos(exp_id:str,
              ) -> None :
    
     save_fname = f"{PLOT_DIR}/figures/pos_{exp_id}.{filetype}"
-    # stat_dir = f"{HOME_DIR}/0THESIS/experiments/{exp_id}"
-    # files = glob.glob(f"{stat_dir}/*")
-    # sub_id = 2
-    # save_fname = f"{HOME_DIR}/0THESIS/video/pos/beetle/pos_{exp_id}_{sub_id}.{filetype}"
-    # stat_dir = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator/examples/results/video"
-    # files = glob.glob(f"{stat_dir}/200_beetle_{sub_id}*")
     
     files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
     files_sorted = [files[i] for i in np.argsort(files)]
@@ -61,7 +56,6 @@ def plot_pos(exp_id:str,
 
         xdata = locs[:,0]
         ydata = locs[:,1]
-        #plt.plot(xdata,ydata, label=f'run{i}')
         plt.plot(xdata,ydata)
 
     #-------------------------
@@ -69,9 +63,8 @@ def plot_pos(exp_id:str,
     #-------------------------
     alpha_gas = 1
     if plot_occ:
-        alpha_gas = 0.8 # TODO: automate occupancy file selection
-        # occ_data_file = f"{HOME_DIR}/0THESIS/environments/003-004/occupancy/wh_simple_0000_grid.npy" # occ data file
-        occ_data_file = f"{HOME_DIR}/0THESIS/environments/006/occupancy/wh_complex_0010_grid.npy" # occ data file
+        alpha_gas = 0.8
+        occ_data_file = glob.glob(f"{ENVS_DIR}/{str(env_id).zfill(3)}/occupancy/*grid.npy")[0] # occ data file
         z_idx = math.ceil((height)/0.2)
         occmap = np.transpose(np.load(occ_data_file)[z_idx])[2:-1,2:-1]
         plt.imshow(occmap, vmin=0, vmax=1, origin='lower', interpolation='none', cmap='binary', extent=(0.,15.,0.,15.), alpha=1)
