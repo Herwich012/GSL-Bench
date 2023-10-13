@@ -13,7 +13,7 @@ from pegasus.simulator.logic.vehicles.vehicle import Vehicle
 # Sensors and dynamics setup
 from pegasus.simulator.logic.dynamics import LinearDrag
 from pegasus.simulator.logic.thrusters import QuadraticThrustCurve
-from pegasus.simulator.logic.sensors import Barometer, IMU, Magnetometer, GPS, MOX, Anemometer
+from pegasus.simulator.logic.sensors import Barometer, IMU, Magnetometer, GPS, MOX, PID, Anemometer
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 class MultirotorConfig:
@@ -41,13 +41,19 @@ class MultirotorConfig:
         # Get the sensor configurations
         self.sensor_configs = sensor_configs
 
-        # The default sensors for a quadrotor + MOX
+        # The default sensors for a quadrotor + MOX/PID
         # self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
         #                 MOX(config=self.sensor_configs.get('mox', {})),
         #                 Anemometer(config=sensor_configs.get('anemometer', {}))]
-        self.sensors = [Barometer(), IMU(), GPS(), 
-                        MOX(config=self.sensor_configs.get('mox', {})),
-                        Anemometer(config=sensor_configs.get('anemometer', {}))]
+        
+        if sensor_configs.get('gas_sensor_type', 'mox') == 'mox':
+            self.sensors = [Barometer(), IMU(), GPS(), 
+                            MOX(config=self.sensor_configs.get('mox', {})),
+                            Anemometer(config=sensor_configs.get('anemometer', {}))]
+        else:
+            self.sensors = [Barometer(), IMU(), GPS(), 
+                            PID(config=self.sensor_configs.get('pid', {})),
+                            Anemometer(config=sensor_configs.get('anemometer', {}))]
 
         # The backends for actually sending commands to the vehicle. By default use mavlink (with default mavlink configurations)
         # [Can be None as well, if we do not desired to use PX4 with this simulated vehicle]. It can also be a ROS2 backend

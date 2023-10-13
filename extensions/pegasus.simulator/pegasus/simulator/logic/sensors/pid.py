@@ -1,10 +1,10 @@
 """
-| File: mox.py
+| File: pid.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: Simulates a Metal-oxide gas sensor. Based on the implementation provided by GADEN (https://github.com/MAPIRlab/gaden)
 """
-__all__ = ["MOX"]
+__all__ = ["PID"]
 
 from omni.isaac.debug_draw import _debug_draw # for plotting the filaments
 
@@ -18,43 +18,43 @@ from pegasus.simulator.logic.state import State
 from pegasus.simulator.logic.sensors import Sensor
 from pegasus.simulator.logic.sensors.gas_sensor_utils import (
     Filament,
-    R0,
-    tau_value,
-    sensitivity_air,
-    sensitivity_lineloglog,
+    PID_CF # PID Correction Factors
 )
 
 
-class MOX(Sensor):
-    """The class that implements a metal oxide (MOX) sensor. This class inherits the base class Sensor.
+class PID(Sensor):
+    """
+    The class that implements a Photoionization detector (PID). This class inherits the base class Sensor.
     """
 
     def __init__(self, config:dict={}):
-        """Initialize the MOX class
+        """Initialize the PID class
 
         Args:
-            config (dict): A Dictionary that contains all the parameters for configuring the MOX sensor.
+            config (dict): A Dictionary that contains all the parameters for configuring the PID sensor.
             it can be empty or only have some of the parameters used by the sensor.
             
         Examples:
             The dictionary default parameters are
 
-            >>> {"env_dict": {}       # dict with environment info
-                 "draw": False        # draw the filaments
-                 "sensor_model": 0,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
-                 "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen
-                 "update_rate": 4.0,  # [Hz] update rate of sensor
+            >>> {"env_dict": {}             # dict with environment info
+                 "draw": False              # draw the filaments
+                 "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
+                 "use_correction": True,    # use correction factor
+                 "update_rate": 4.0,        # [Hz] update rate of sensor
                  "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
                  "gas_data_start_iter": 0,  # start iteration
             >>>  "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         """
 
         # Initialize the Super class "object" attributes
-        super().__init__(sensor_type="MOX", update_rate=config.get("update_rate", 4.0))
+        super().__init__(sensor_type="PID", update_rate=config.get("update_rate", 4.0))
         
         # TODO - put all filament iterations into one array
         # Location of the gas data
+        # self._AutoGDM2_dir = config["env_dict"].get("AutoGDM2_dir", "/home/user/AutoGDM2/")
         self._env_dir = config["env_dict"].get("env_dir", "/home/user/Omniverse_extensions/PegasusSimulator/examples/environments/001/")
+        self._env_name = config["env_dict"].get("env_name", "wh_empty_0000")
         self._gas_data_dir = glob.glob(f"{self._env_dir}gas_data/*/")[0]
         self._gas_data_files = os.listdir(self._gas_data_dir)
 
@@ -87,15 +87,14 @@ class MOX(Sensor):
         self._updates_per_gas_iter = int(self._gas_data_time_step*self._update_rate) - 1
 
         # Set gas type and sensor model
-        self._sensor_model = config.get("sensor_model", 0) # see mox_utils.py for sensor models
         self._gas_type = config.get("gas_type", 0)
+        if self._gas_type > 2:
+            raise Exception(f"PID gas_type should not exceed 2. The value was {self._gas_type}")
+        self._use_correction = config.get("use_correction", True)
 
         # Sensor outputs
         self._sensor_output = 0.0
         self._gas_conc = 0.0
-        self._RS_R0 = 0.0
-
-        self._first_reading = True
         self._time_tot = 0.0
 
         # Draw interface for drawing the filaments
@@ -103,8 +102,8 @@ class MOX(Sensor):
         if self._draw_bool:
             self.draw = _debug_draw.acquire_debug_draw_interface()
 
-        # Save the current state measured by the MOX sensor:
-        self._state = {"sensor_output": np.zeros((3,))} # [sensor_output, gas_conc, RS_R0]
+        # Save the current state measured by the PID sensor:
+        self._state = {"sensor_output": np.zeros((2,))} # [sensor_output, gas_conc, RS_R0]
 
     @property
     def state(self):
@@ -115,7 +114,7 @@ class MOX(Sensor):
 
     @Sensor.update_at_rate
     def update(self, state: State, dt: float):
-        """Method that implements the logic of a MOX sensor. Here the 
+        """Method that implements the logic of a PID sensor. Here the 
 
         Args:
             state (State): The current state of the vehicle.
@@ -177,13 +176,13 @@ class MOX(Sensor):
                     self.check_env_for_obstacle3D(loc, np.array([filament.x, filament.y, filament.z])):
                     self._gas_conc += self.concentration_from_filament(loc, filament, gas_data_head)
 
-        # Simulate MOX sensor response
-        self._sensor_output, self._RS_R0 = self.simulate_mox_as_line_loglog(dt, self._gas_conc)
+        # Simulate PID sensor response
+        self._sensor_output = self.simulate_pid(dt, self._gas_conc)
 
         # Add the values to the dictionary and return it
-        self._state = {"sensor_output": np.array([self._sensor_output, self._gas_conc, self._RS_R0])}
+        self._state = {"sensor_output": np.array([self._sensor_output, self._gas_conc])}
 
-        #print("{:.0f}".format(self._filament_iter), "{:.2f}".format(self._time_tot), "{:.6f}".format(self._sensor_output), "{:.6f}".format(self._gas_conc), "{:.6f}".format(self._RS_R0))
+        # print("{:.0f}".format(self._filament_iter), "{:.2f}".format(self._time_tot), "{:.6f}".format(self._sensor_output), "{:.6f}".format(self._gas_conc),)
         return self._state
 
     
@@ -192,10 +191,6 @@ class MOX(Sensor):
         self._filament_iter = self._iter_start
         self._sensor_output = 0.0
         self._gas_conc = 0.0
-        self._RS_R0 = 0.0
-
-        self._first_reading = True
-
         self._time_tot = 0.0
 
 
@@ -207,66 +202,20 @@ class MOX(Sensor):
                                 (math.sqrt(8*pow(math.pi,3)) * pow(filament.sigma,3))) * \
                                     math.exp(-pow(distance_cm,2)/(2*pow(filament.sigma,2)))
         ppm = num_moles_target_cm3 / gas_data_head['num_moles_all_gases_in_cm3'][0] * 1000000 # parts of target gas per million
+        
         return ppm
 
 
-    def simulate_mox_as_line_loglog(self, dt:float, gas_concentration:float) -> Tuple[float,float]:
-        # Initialize sensor if it is the first reading
-        if self._first_reading:
-            sensor_output = RS_R0 = sensitivity_air[self._sensor_model] # RS_R0 value at air
-            self._previous_sensor_output = sensor_output
-            self._first_reading = False
-        
+    def simulate_pid(self, dt:float, gas_concentration:float) -> float:
+        reading = 0.0
+            
+        if self._use_correction:
+            if PID_CF[self._gas_type] != 0.0:
+                reading = gas_concentration / PID_CF[self._gas_type]
         else:
-            #1. Set Sensor Output based on gas concentrations (gas type dependent)
-            #---------------------------------------------------------------------
-            # RS/R0 = A*conc^B (a line in the loglog scale)
-            # TODO implement detection of multiple gases at once?
-            # TODO implement noise?
+            reading = gas_concentration
 
-            resistance_variation = 0.0
-
-            # Value of RS/R0 for the given gas and concentration
-            if gas_concentration == 0.0: # if statement because python math.pow() does not like infinity
-                RS_R0 = sensitivity_air[self._sensor_model]
-            else:
-                RS_R0 = sensitivity_lineloglog[self._sensor_model][self._gas_type][0] * \
-                    math.pow(gas_concentration, sensitivity_lineloglog[self._sensor_model][self._gas_type][1])
-
-            # Ensure we never overpass the baseline level (max allowed)
-            if (RS_R0 > sensitivity_air[self._sensor_model]):
-                RS_R0 = sensitivity_air[self._sensor_model]
-
-            # Increment with respect the Baseline
-            resistance_variation = sensitivity_air[self._sensor_model] - RS_R0
-
-            # Calculate RS_R0 given the resistance variation
-            RS_R0 = sensitivity_air[self._sensor_model] - resistance_variation
-
-            # Ensure a minimum sensor resitance
-            if (RS_R0 <= 0.0):
-                RS_R0 = 0.01
-
-            #2. Simulate transient response (dynamic behaviour, tau_r and tau_d)
-            #---------------------------------------------------------------------
-            if (RS_R0 < self._previous_sensor_output):  # rise
-                tau = tau_value[self._sensor_model][0][0]
-            else: # decay
-                tau = tau_value[self._sensor_model][0][1]
-
-            # Use a low pass filter
-            # alpha value = At/(tau+At)
-            alpha = (dt) / (tau+(dt))
-            #print(f"Previous: {round(self._previous_sensor_output,6)}\n")
-
-            # Filtered response (uses previous estimation):
-            sensor_output = (alpha*RS_R0) + (1-alpha)*self._previous_sensor_output
-
-            # Update values
-            self._previous_sensor_output = sensor_output
-
-        # Return Sensor response for current time instant as the Sensor Resistance in Ohms
-        return(sensor_output * R0[self._sensor_model]), RS_R0
+        return reading
 
 
     def check_env_for_obstacle3D(self, start:np.ndarray, end:np.ndarray) -> bool:

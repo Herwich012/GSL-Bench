@@ -3,7 +3,7 @@
 | File: 10_python_single_vehicle_mox.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
-| Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
+| Description: This files serves as an example on how to run a GSL experiment with a single vehicle.
 """
 import yaml
 import glob
@@ -55,7 +55,7 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get the current directory
         
         # Select the environment id
-        env_id = 6
+        env_id = 1
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
@@ -65,9 +65,7 @@ class PegasusApp:
 
         # Combine environment info into env_dict
         env_dict = {"env_dir": self.env_dir,
-                    #"env_type": env_type,
                     "env_id": env_id,
-                    #"env_name": env_name,
                     "env_spec": env_spec}
 
         # Acquire the timeline thatfwill be used to start/stop the simulation
@@ -95,7 +93,7 @@ class PegasusApp:
                           [7.5, 12.0,0.2], # 7
                           [12.0,12.0,0.2]] # 8
         
-        # Set spawn position of the multirotor and experiment ID ##################################################
+        # Set spawn position of the multirotor and experiment ID
         init_pos_1 = posittion_grid[5]
         self.exp_id = '000'
         
@@ -110,20 +108,32 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,        # draw the filaments
-                      "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
-                      "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
-                      "update_rate": 10.0,  # [Hz] update rate of sensor
+                      "draw": True,                 # draw the filaments
+                      "sensor_model": 1,            # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                      "gas_type": 0,                # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
+                      "update_rate": 4.0,           # [Hz] update rate of sensor
+                      "gas_data_time_step": 0.5,    # [s] time steps between gas data iterations (in seconds to match GADEN)
+                      "gas_data_start_iter": 300,   # start iteration
+                      "gas_data_stop_iter": 0}      # stop iteration (0 -> to the last iteration)
+        
+        pid_config = {"env_dict": env_dict,      # dict with environment info
+                      "draw": True,              # draw the filaments
+                      "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
+                      "use_correction": True,    # use correction factor
+                      "update_rate": 4.0,        # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
-                      "gas_data_start_iter": 300,  # start iteration
+                      "gas_data_start_iter": 300,# start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+
         anemo_config = {"env_dict": env_dict,
                         "update_rate": 10.0,  # [Hz] update rate of sensor
                         "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
                         "wind_data_start_iter": 0,  # start iteration
                         "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         
-        sensor_configs = {'mox': mox_config,
+        sensor_configs = {'gas_sensor_type': 'mox', # select gas sensor type: 'mox', 'pid'
+                          'mox': mox_config,
+                          'pid': pid_config,
                           'anemometer': anemo_config}
 
         # Create the vehicle 1

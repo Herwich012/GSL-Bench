@@ -57,19 +57,12 @@ class PegasusApp:
         """
         self.start_time = datetime.now() # For timing the runs afterwards
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
-        
-        # Point to the generated environment(s)
-        # AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        # env_type = 'wh_empty'
-        # env_id = 1
-        # env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
         # Select the environment id
         env_id = 6
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
-        # with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
         with open(glob.glob(f"{self.env_dir}occupancy/*head.txt")[0], 'r') as file:
             env_spec = yaml.safe_load(file)
 
@@ -92,7 +85,6 @@ class PegasusApp:
         self.world = self.pg.world
 
         # Launch one of the worlds provided AutoGDM2
-        #self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
         self.pg.load_environment(glob.glob(f"{self.env_dir}usd/*.usd")[0])
 
         posittion_grid = [[3.0, 3.0, 0.2], # 0
@@ -117,20 +109,32 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,        # draw the filaments
-                      "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
-                      "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
-                      "update_rate": 4.0,  # [Hz] update rate of sensor
+                      "draw": True,                 # draw the filaments
+                      "sensor_model": 1,            # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                      "gas_type": 0,                # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
+                      "update_rate": 4.0,           # [Hz] update rate of sensor
+                      "gas_data_time_step": 0.5,    # [s] time steps between gas data iterations (in seconds to match GADEN)
+                      "gas_data_start_iter": 300,   # start iteration
+                      "gas_data_stop_iter": 0}      # stop iteration (0 -> to the last iteration)
+        
+        pid_config = {"env_dict": env_dict,      # dict with environment info
+                      "draw": True,              # draw the filaments
+                      "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
+                      "use_correction": True,    # use correction factor
+                      "update_rate": 4.0,        # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
-                      "gas_data_start_iter": 300,  # start iteration
+                      "gas_data_start_iter": 300,# start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+
         anemo_config = {"env_dict": env_dict,
-                        "update_rate": 4.0,  # [Hz] update rate of sensor
+                        "update_rate": 10.0,  # [Hz] update rate of sensor
                         "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
                         "wind_data_start_iter": 0,  # start iteration
                         "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         
-        sensor_configs = {'mox': mox_config,
+        sensor_configs = {'gas_sensor_type': 'mox', # select gas sensor type here: 'mox', 'pid'
+                          'mox': mox_config,
+                          'pid': pid_config,
                           'anemometer': anemo_config}
 
         # Create instance of multi vehicle algorithm 

@@ -6,9 +6,8 @@
 """
 import numpy as np
 
-
 # Declare which functions are visible from this file
-__all__ = ["Filament", "labels", "R0", "tau_value", "sensitivity_air", "sensitivity_lineloglog"]
+__all__ = ["Filament", "labels", "R0", "tau_value", "sensitivity_air", "sensitivity_lineloglog", "PID_CF"]
 
 class Filament():
     def __init__(self, id=0, x=0.0, y=0.0, z=0.0, sigma=0.0):
@@ -128,3 +127,11 @@ sensitivity_lineloglog = np.array([   #5 Sensors, 7 Gases, 2 Constants: A, B
        [146.2, -0.5916],   #fluorine (To review)
        [146.2, -0.5916]    #Acetone (To review)
     ]])
+
+
+# PID correction factors
+# http://www.intlsensor.com/pdf/pidcorrectionfactors.pdf
+# Here we simulate a lamp of 11.7eV to increase the range of detectable gases
+# A 0.0 means the PID is not responsive to that gas
+# Ethanol, Methane, Hydrogen, Propanol, Chlorine, Fluorine, Acetone
+PID_CF = np.array([10.47, 0.0, 0.0, 2.7, 1.0, 0.0, 1.4])
