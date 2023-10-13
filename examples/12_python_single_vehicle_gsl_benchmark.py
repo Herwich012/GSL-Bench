@@ -5,18 +5,20 @@
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 | Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
 """
+import os
 import ast
 import sys # get exp id and init pos
+import yaml
+import glob
+import numpy as np
+from datetime import datetime
+from pathlib import Path
+
 argv = sys.argv
 argv = argv[argv.index("--") + 1:] # get all the args after " -- "
 exp_id = argv[0]    # experiment id
 env_id = argv[1]    # environment id
 exp_pos = argv[2]   # initial posisiton
-
-import yaml
-import glob
-import numpy as np
-from datetime import datetime
 
 # Imports to start Isaac Sim from this script
 import carb
@@ -46,11 +48,6 @@ from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 # Auxiliary scipy and numpy modules
 from scipy.spatial.transform import Rotation
 
-# Use os and pathlib for parsing the desired trajectory from a CSV file
-import os
-from pathlib import Path
-
-
 class PegasusApp:
     """
     A Template class that serves as an example on how to build a simple Isaac Sim standalone App.
@@ -62,18 +59,11 @@ class PegasusApp:
         """
         self.start_time = datetime.now() # For timing the runs afterwards
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
-              
-        # Point to the generated environment(s)
-        # AutoGDM2_dir = '/home/hajo/AutoGDM2/'
-        # env_type = 'wh_complex'
-        # env_id = 10
-        # env_name = f'{env_type}_{str(env_id).zfill(4)}'
 
         # Select the environment directory
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
-        # with open(f'{AutoGDM2_dir}environments/occupancy/{env_name}_head.txt', 'r') as file:
         with open(glob.glob(f"{self.env_dir}occupancy/*head.txt")[0], 'r') as file:
             env_spec = yaml.safe_load(file)
 
@@ -99,7 +89,7 @@ class PegasusApp:
         #self.pg.load_environment(f'{AutoGDM2_dir}environments/isaac_sim/{env_name}.usd')
         self.pg.load_environment(glob.glob(f"{self.env_dir}usd/*.usd")[0])
         
-        # Set spawn position of the multirotor and experiment ID ##################################################
+        # Set spawn position of the multirotor and experiment ID
         self.exp_id = id
         init_pos_1 = pos
         
@@ -110,22 +100,33 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,        # draw the filaments
-                      "sensor_model": 1,   # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
-                      "gas_type": 0,       # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
-                      "update_rate": 4.0,  # [Hz] update rate of sensor
+                      "draw": True,                 # draw the filaments
+                      "sensor_model": 1,            # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
+                      "gas_type": 0,                # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
+                      "update_rate": 4.0,           # [Hz] update rate of sensor
+                      "gas_data_time_step": 0.5,    # [s] time steps between gas data iterations (in seconds to match GADEN)
+                      "gas_data_start_iter": 300,   # start iteration
+                      "gas_data_stop_iter": 0}      # stop iteration (0 -> to the last iteration)
+        
+        pid_config = {"env_dict": env_dict,      # dict with environment info
+                      "draw": True,              # draw the filaments
+                      "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
+                      "use_correction": True,    # use correction factor
+                      "update_rate": 4.0,        # [Hz] update rate of sensor
                       "gas_data_time_step": 0.5, # [s] time steps between gas data iterations (in seconds to match GADEN)
-                      "gas_data_start_iter": 300,  # start iteration
+                      "gas_data_start_iter": 300,# start iteration
                       "gas_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
+
         anemo_config = {"env_dict": env_dict,
-                        "update_rate": 4.0,  # [Hz] update rate of sensor
+                        "update_rate": 10.0,  # [Hz] update rate of sensor
                         "wind_data_time_step": 1.0, # [s] time steps between wind data iterations
                         "wind_data_start_iter": 0,  # start iteration
                         "wind_data_stop_iter": 0}   # stop iteration (0 -> to the last iteration)
         
-        sensor_configs = {'mox': mox_config,
+        sensor_configs = {'gas_sensor_type': 'mox', # select gas sensor type here: 'mox', 'pid'
+                          'mox': mox_config,
+                          'pid': pid_config,
                           'anemometer': anemo_config}
-
         # Create the vehicle 1
         # Try to spawn the selected robot in the world to the specified namespace
         config_multirotor1 = MultirotorConfig(sensor_configs=sensor_configs)
