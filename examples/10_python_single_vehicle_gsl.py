@@ -31,8 +31,8 @@ from pegasus.simulator.logic.vehicles.multirotor_gsl import Multirotor, Multirot
 from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
-# from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
-from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
+from examples.utils.nonlinear_controller_ecoli3D_oa import NonlinearController
+# from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
 # Auxiliary scipy and numpy modules
@@ -55,7 +55,7 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get the current directory
         
         # Select the environment id
-        env_id = 1
+        env_id = 3
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
@@ -104,7 +104,7 @@ class PegasusApp:
         # Auxiliar variable for repeated runs
         self.save_statistics = False
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_ecoli3D_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,

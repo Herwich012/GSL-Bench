@@ -6,6 +6,7 @@
 from .gsl import GSL
 from .stop_conditions import StopCondition
 from .ecoli import E_Coli
+from .ecoli3D import E_Coli3D
 from .dungbeetle1 import DungBeetle1
 from .dungbeetle2 import DungBeetle2
 from .pso import PSO

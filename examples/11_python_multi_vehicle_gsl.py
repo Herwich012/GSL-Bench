@@ -17,7 +17,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": False})
+simulation_app = SimulationApp({"headless": True})
 
 # -----------------------------------
 # The actual script should start here
@@ -59,7 +59,7 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
 
         # Select the environment id
-        env_id = 6
+        env_id = 2
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
@@ -68,9 +68,7 @@ class PegasusApp:
 
         # Combine environment info into env_dict
         env_dict = {"env_dir": self.env_dir,
-                    #"env_type": env_type,
                     "env_id": env_id,
-                    #"env_name": env_name,
                     "env_spec": env_spec}
 
         # Acquire the timeline thatfwill be used to start/stop the simulation
@@ -109,7 +107,7 @@ class PegasusApp:
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,                 # draw the filaments
+                      "draw": False,                 # draw the filaments
                       "sensor_model": 1,            # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,                # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,           # [Hz] update rate of sensor
@@ -118,7 +116,7 @@ class PegasusApp:
                       "gas_data_stop_iter": 0}      # stop iteration (0 -> to the last iteration)
         
         pid_config = {"env_dict": env_dict,      # dict with environment info
-                      "draw": True,              # draw the filaments
+                      "draw": False,              # draw the filaments
                       "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
                       "use_correction": True,    # use correction factor
                       "update_rate": 4.0,        # [Hz] update rate of sensor
@@ -215,7 +213,7 @@ class PegasusApp:
 
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([5.0, 1.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=np.array([1.0, 10.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
                                        distance2src=1.0)
         
         # Reset the simulation environment so that all articulations (aka robots) are initialized
@@ -243,7 +241,7 @@ class PegasusApp:
                                          pos_current = pos):
                 pos = np.append(self.gsl.swarm_pos_best,[4.0])
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=True)
+                self.world.step(render=False)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller0.run_success[0] = True

@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from pathlib import Path
 from datetime import datetime
+
 argv = sys.argv
 try:
     Y_ARG = argv[1]
@@ -30,26 +31,20 @@ class Benchmark:
         self.y_arg =        Y_ARG
         self.scripts =      benchdict.get('scripts', ['examples/12_python_single_vehicle_gsl_benchmark.py'])
         self.envs =         benchdict.get('envs', [1])
-        self.exp_start_id = benchdict.get('start_id', None)
+        self.exp_start_id = benchdict.get('start_id', self.get_exp_start_id())
         self.pos_list =     benchdict.get('pos_list', DEFAULT_POS)
-        self.pos_select =   benchdict.get('pos_select', None)
+        self.pos_select =   benchdict.get('pos_select', range(len(DEFAULT_POS)))
         self.comment =      benchdict.get('comment', '')
         self.savetxt =      benchdict.get('save_txt', True)
         self.dry_run =      benchdict.get('dry_run', False)
 
-        if self.exp_start_id == None:
-            self.set_exp_start_id()
-
-        if self.pos_select == None:
-            self.pos_select = range(len(DEFAULT_POS))
-
         self.benchmark_list = self.get_benchmark_list()
 
     
-    def set_exp_start_id(self) -> None:
+    def get_exp_start_id(self) -> int:
         exp_dirs = [float(i) for i in os.listdir(RESULTS_DIR) if self.is_float(i)]
         exp_last = int(np.max(exp_dirs))
-        self.exp_start_id = exp_last + 1
+        return exp_last + 1
 
 
     def get_benchmark_list(self) -> list:
@@ -89,10 +84,10 @@ class Benchmark:
     def prompt(self) -> bool:
         if self.dry_run: print("DRY RUN!!!")
         print("The following experiments are in queue:")
-        print("exp_id                      script                         env_id   start pos")
+        print(" exp_id                      script                         env_id   start_pos")
         print("--------------------------------------------------------------------------------")
-        print(*self.benchmark_list, sep = '\n')
         #     ['001', 'examples/12_python_single_vehicle_gsl_benchmark.py', 5, [7.5, 12.0,0.2]]
+        print(*self.benchmark_list, sep = '\n')
         
         if self.y_arg == None:
             answer = input("Continue? y/n:")
@@ -136,12 +131,16 @@ class Benchmark:
             return False
 
 
+    def gen_plots(self):
+        # TODO: make function that automatically generates the requested plots
+        pass
+
+
 if __name__ == "__main__":
     bm = Benchmark(benchdict={
-        "envs": [1],
-        "pos_select": [0],
-        "comment": "test",
-        "save_txt": False,
+        "envs": [1,2,3,4,5,6],
+        "save_txt": True,
+        "comment": "Ecoli3D",
         "dry_run": True})
-    bm.run()
     
+    bm.run()

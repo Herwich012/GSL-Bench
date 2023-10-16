@@ -27,7 +27,7 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": False})
+simulation_app = SimulationApp({"headless": True})
 
 # -----------------------------------
 # The actual script should start here
@@ -42,6 +42,7 @@ from pegasus.simulator.logic.interface.pegasus_interface import PegasusInterface
 
 # Import the custom python control backend and end conditions
 from examples.utils.nonlinear_controller_ecoli_oa import NonlinearController
+
 #from examples.utils.nonlinear_controller_dungbeetle_oa import NonlinearController # change this line for a different algorithm
 from pegasus.simulator.logic.gsl.stop_conditions import StopCondition
 
@@ -94,13 +95,13 @@ class PegasusApp:
         init_pos_1 = pos
         
         # Auxiliar variable for repeated runs
-        self.save_statistics = False
+        self.save_statistics = True
         self.runs = 10
-        self.statistics = [f"{self.exp_id}_ecoli_{i}" for i in range(self.runs)]
+        self.statistics = [f"{self.exp_id}_ecoli3D_{i}" for i in range(self.runs)]
 
         # Set sensor parameters
         mox_config = {"env_dict": env_dict,
-                      "draw": True,                 # draw the filaments
+                      "draw": False,                 # draw the filaments
                       "sensor_model": 1,            # ["TGS2620", "TGS2600", "TGS2611", "TGS2610", "TGS2612"]
                       "gas_type": 0,                # 0=Ethanol, 1=Methane, 2=Hydrogen # TODO - get from settings!
                       "update_rate": 4.0,           # [Hz] update rate of sensor
@@ -109,7 +110,7 @@ class PegasusApp:
                       "gas_data_stop_iter": 0}      # stop iteration (0 -> to the last iteration)
         
         pid_config = {"env_dict": env_dict,      # dict with environment info
-                      "draw": True,              # draw the filaments
+                      "draw": False,              # draw the filaments
                       "gas_type": 0,             # 0=Ethanol, 1=Methane, 2=Hydrogen
                       "use_correction": True,    # use correction factor
                       "update_rate": 4.0,        # [Hz] update rate of sensor
@@ -147,9 +148,14 @@ class PegasusApp:
             config=config_multirotor1,
         )
 
+        if (int(env_id)%2) == 0:
+            self.source_pos = np.array([1.0, 10.0, 2.0]) # TODO - read source_pos from settings
+        else:
+            self.source_pos = np.array([5.0, 1.0, 2.0])
+
         # Set stop condition(s)
         self.stop_cond = StopCondition(time=300.0,
-                                       source_pos=np.array([1.0, 10.0, 4.0]), # TODO - read source_pos from settingsl, and add 2D setting
+                                       source_pos=self.source_pos, 
                                        distance2src=1.0)
         
         # Set the camera to a nice position so that we can see the environment
@@ -177,7 +183,7 @@ class PegasusApp:
             while not self.stop_cond.get(time_current = self.controller.total_time,
                                          pos_current = self.controller.p):
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=True)
+                self.world.step(render=False)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller.run_success[0] = True
