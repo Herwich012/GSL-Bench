@@ -61,6 +61,9 @@ class Benchmark:
 
 
     def save_benchmark_list(self) -> None:
+        if self.dry_run:
+            return
+        
         if self.comment:
             filename = f'{datetime.now().strftime("%Y-%m-%d")}_{datetime.now().strftime("%H:%M:%S")}_{self.comment}'
         else:
@@ -83,6 +86,8 @@ class Benchmark:
 
     def prompt(self) -> bool:
         if self.dry_run: print("DRY RUN!!!")
+        if self.comment:
+            print(f"Benchmarking: {self.comment}")
         print("The following experiments are in queue:")
         print(" exp_id                      script                         env_id   start_pos")
         print("--------------------------------------------------------------------------------")
@@ -101,6 +106,9 @@ class Benchmark:
 
 
     def make_exp_dir(self, parameters) -> None:
+        if self.dry_run:
+            return
+    
         exp_path = f"{CURR_DIR}/examples/results/{parameters[0]}/"
         if not os.path.exists(exp_path): # create experiment folder if it does not exist yet
             os.system(f"mkdir -p {exp_path}") 
@@ -141,6 +149,7 @@ if __name__ == "__main__":
         "envs": [1,2,3,4,5,6],
         "save_txt": True,
         "comment": "Ecoli3D",
-        "dry_run": True})
+        "dry_run": False,
+        })
     
     bm.run()

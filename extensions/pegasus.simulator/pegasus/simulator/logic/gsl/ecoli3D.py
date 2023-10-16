@@ -1,5 +1,5 @@
 """
-| File: ecoli.py
+| File: ecoli3D.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
 """
