@@ -42,7 +42,7 @@ class Benchmark:
         self.benchmark_list = self.get_benchmark_list()
         self.exp_amount = len(self.benchmark_list)
 
-    
+
     def get_exp_start_id(self) -> int:
         exp_dirs = [float(i) for i in os.listdir(RESULTS_DIR) if self.is_float(i)]
         exp_last = int(np.max(exp_dirs))
@@ -125,6 +125,7 @@ class Benchmark:
             for _,benchmark in zip(self.progressbar(range(self.exp_amount)),self.benchmark_list):
                 self.make_exp_dir(benchmark)
                 self.execute(benchmark)
+            
             
             print(f"Finished {self.exp_amount} experiments in {datetime.now() - self.start_time}")
         
