@@ -8,11 +8,8 @@
 Omniverse](https://docs.omniverse.nvidia.com/) and [Isaac
 Sim](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html). It is designed to provide an easy yet powerful way to simulate and evaluate gas source localization tasks. 
 
-GSL-Bench extends the Pegasus Simulator framework by introducing GSL environments and sensors. Included are six GSL environments, more environments may be created with [AutoGDM+](https://github.com/tudelft/autoGDMplus). Also included are modules that automatically test the performance of algorithms and plot metrics. At the moment, only multirotor vehicles are supported, with support for other vehicle topologies planned for future versions. Check out the video to get an impression of GSL-Bench:
+GSL-Bench extends the Pegasus Simulator framework by introducing GSL environments and sensors. Included are six GSL environments, more environments may be created with [AutoGDM+](https://github.com/tudelft/autoGDMplus). Also included are modules that automatically test the performance of algorithms and plot metrics. At the moment, only multirotor vehicles are supported, with support for other vehicle topologies planned for future versions. Check out [this video](https://youtu.be/kZa48WXf_1w?si=rkANmCbrxB9xOoii) to get an impression of GSL-Bench.
 
-<p align="center">
-<video src="docs/_static/GLS-Bench_Compressed.mp4" width="560" height="315" controls></video>
-</p>
 
 ## Installation
 ℹ️ GSL-Bench has only been verified to work with `Ubuntu 20.04 LTS` and `Isaac Sim 2022.2.0`
