@@ -42,14 +42,11 @@ class MultirotorConfig:
         self.sensor_configs = sensor_configs
 
         # The default sensors for a quadrotor + MOX/PID
-        # self.sensors = [Barometer(), IMU(), Magnetometer(), GPS(), 
-        #                 MOX(config=self.sensor_configs.get('mox', {})),
-        #                 Anemometer(config=sensor_configs.get('anemometer', {}))]
-        
         if sensor_configs.get('gas_sensor_type', 'mox') == 'mox':
             self.sensors = [Barometer(), IMU(), GPS(), 
                             MOX(config=self.sensor_configs.get('mox', {})),
-                            Anemometer(config=sensor_configs.get('anemometer', {}))]
+                            Anemometer(config=sensor_configs.get('anemometer', {}))
+                            ]
         else:
             self.sensors = [Barometer(), IMU(), GPS(), 
                             PID(config=self.sensor_configs.get('pid', {})),
@@ -159,6 +156,9 @@ class Multirotor(Vehicle):
 
         for sensor in self._sensors[-2:]: # Stop MOX and Anemometer
             sensor.stop()
+
+        # for sensor in self._sensors[-1:]: # Stop MOX
+        #     sensor.stop()
     
     def update(self, dt: float):
         """

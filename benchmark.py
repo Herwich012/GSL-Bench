@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import numpy as np
 from pathlib import Path
 from datetime import datetime
@@ -39,6 +40,7 @@ class Benchmark:
         self.dry_run =      benchdict.get('dry_run', False)
 
         self.benchmark_list = self.get_benchmark_list()
+        self.exp_amount = len(self.benchmark_list)
 
     
     def get_exp_start_id(self) -> int:
@@ -70,6 +72,8 @@ class Benchmark:
             filename = f'{datetime.now().strftime("%Y-%m-%d")}_{datetime.now().strftime("%H:%M:%S")}'
         
         with open(f'{CURR_DIR}/{filename}.txt', 'w') as outfile:
+            outfile.write(' exp_id                      script                         env_id   start_pos\n')
+            outfile.write('--------------------------------------------------------------------------------\n')
             outfile.write('\n'.join(str(i) for i in self.benchmark_list))
 
 
@@ -95,7 +99,7 @@ class Benchmark:
         print(*self.benchmark_list, sep = '\n')
         
         if self.y_arg == None:
-            answer = input("Continue? y/n:")
+            answer = input("Continue? (y/n):")
         else:
             answer = self.y_arg
         
@@ -118,10 +122,11 @@ class Benchmark:
         if self.prompt():
             if self.savetxt: self.save_benchmark_list()
 
-            for benchmark in self.benchmark_list:
+            for _,benchmark in zip(self.progressbar(range(self.exp_amount)),self.benchmark_list):
                 self.make_exp_dir(benchmark)
                 self.execute(benchmark)
-            print(f"Finished {len(self.benchmark_list)} experiments in {datetime.now() - self.start_time}")
+            
+            print(f"Finished {self.exp_amount} experiments in {datetime.now() - self.start_time}")
         
         else:
             print("Benchmark canceled")
@@ -139,7 +144,26 @@ class Benchmark:
             return False
 
 
-    def gen_plots(self):
+    # TODO: implement this function
+    def progressbar(self, it, prefix="", size=60, out=sys.stdout):
+        count = len(it)
+        start = time.time()
+        def show(j):
+            x = int(size*j/count)
+            remaining = ((time.time() - start) / j) * (count - j)
+            
+            mins, sec = divmod(remaining, 60)
+            time_str = f"{int(mins):02}:{sec:05.2f}"
+            
+            print(f"{prefix}[{u'█'*x}{('.'*(size-x))}] {j}/{count} Est wait {time_str}", end='\r', file=out, flush=True)
+            
+        for i, item in enumerate(it):
+            yield item
+            show(i+1)
+        print("\n", flush=True, file=out)
+
+
+    def gen_plots(self) -> None:
         # TODO: make function that automatically generates the requested plots
         pass
 
@@ -151,5 +175,5 @@ if __name__ == "__main__":
         "comment": "Ecoli3D",
         "dry_run": False,
         })
-    
+
     bm.run()

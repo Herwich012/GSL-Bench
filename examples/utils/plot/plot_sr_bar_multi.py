@@ -8,10 +8,10 @@ import glob
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['figure.dpi'] = 300
+# plt.rcParams['figure.dpi'] = 300
 plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
-plt.rcParams["font.family"] = "Times New Roman"
+# plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
 RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
@@ -20,21 +20,21 @@ PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 ### Save params ###
 save_plot = False
 filetype = 'pdf'
-save_fname = f"{PLOT_DIR}/success_overall.{filetype}"
+save_fname = f"{PLOT_DIR}/success_overall_add.{filetype}"
 
 ### Data selection ###
-algorithms = ("E. Coli", "Dung Beetle", "Random Walker")
+algorithms = ("E. Coli", "Dung Beetle", "Random Walker", "3D E. coli")
 environments = ("1", "2", "3", "4", "5", "6")
-exp_id_starts = [[ 10,  19,  28], # env 001
-                 [ 46,  55,  37], # env 002
-                 [ 82, 100,  91], # ...
-                 [109, 127, 118],
-                 [136, 154, 145],
-                 [199, 181, 172]]
-runs_per_exp = 9 # amount of runs in one experiment
+exp_id_starts = [[ 10,  19,  28, 208], # env 001
+                 [ 46,  55,  37, 217], # env 002
+                 [ 82, 100,  91, 226], # ...
+                 [109, 127, 118, 235],
+                 [136, 154, 145, 244],
+                 [199, 181, 172, 253]]
+loc_amount = 9 # amount of locations per environment
 
 def get_sr(start:int) -> list:
-    experiments = [str(i + start).zfill(3) for i in range(runs_per_exp)]
+    experiments = [str(i + start).zfill(3) for i in range(loc_amount)]
     success = []
 
     for _,exp_id in enumerate(experiments):
@@ -67,13 +67,13 @@ for i,algorithm in enumerate(algorithms): # per algorithm
 # Plot Bargraph
 #-------------------------
 fig, ax = plt.subplots()
-fig.set_figheight(4)
-fig.set_figwidth(5)
+fig.set_figheight(5)
+fig.set_figwidth(7)
 
 x = np.arange(len(environments))  # the label locations
-width = 0.25  # the width of the bars
-multiplier = 0
-hatching = ('..','///','O')
+width = 0.2  # the width of the bars
+multiplier = -0.5
+hatching = ('..','///','O', '/')
 
 for (attribute,measurement),hatchtype in zip(success_dict.items(),hatching):
     offset = width * multiplier

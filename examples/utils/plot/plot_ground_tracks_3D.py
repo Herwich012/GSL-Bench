@@ -10,20 +10,20 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 # plt.rcParams['figure.dpi'] = 300
-plt.rcParams['pdf.fonttype'] = 42
-plt.rcParams['ps.fonttype'] = 42
+# plt.rcParams['pdf.fonttype'] = 42
+# plt.rcParams['ps.fonttype'] = 42
 # plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
-RESULTS_DIR = f"{PEGASUS_DIR}/examples/results/pso/000"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
 ENVS_DIR =    f"{PEGASUS_DIR}/examples/environments"
 PLOT_DIR =    f"{PEGASUS_DIR}/examples/utils/plot"
 
 ### Save Params ###
-exp_id = 5
-save_plot = True
+exp_id = 223
+save_plot = False
 filetype = 'pdf'
-env_id = 1
+env_id = 2
 
 multiple = False  # create multiple plots from multiple experiments
 exp_amount = 9 # amount of experiments
@@ -36,9 +36,9 @@ def plot_pos(exp_id:str,
              filetype:str   = 'pdf'
              ) -> None :
    
-    save_fname = f"{PLOT_DIR}/figures/pos_pso_{exp_id}.{filetype}"
+    save_fname = f"{PLOT_DIR}/figures/pos_{exp_id}.{filetype}"
     
-    files = glob.glob(f"{RESULTS_DIR}/pso_run_{exp_id}_id*")
+    files = glob.glob(f"{RESULTS_DIR}/{exp_id}/*")
     files_sorted = [files[i] for i in np.argsort(files)]
     print(files_sorted)
     
@@ -46,9 +46,9 @@ def plot_pos(exp_id:str,
     # Ground track plot
     #-------------------------
 
-    fig, ax = plt.subplots()
-    fig.set_figheight(5)
-    fig.set_figwidth(6)
+    ax = plt.figure().add_subplot(projection='3d')
+    # fig.set_figheight(4)
+    # fig.set_figwidth(5)
 
     for _,file in enumerate(files_sorted):
 
@@ -57,20 +57,21 @@ def plot_pos(exp_id:str,
 
         xdata = locs[:,0]
         ydata = locs[:,1]
-        plt.plot(xdata,ydata)
-        plt.scatter([xdata[0]], [ydata[0]], c='r', label='start', marker="^", zorder=3.5)
+        zdata = locs[:,2]
+        ax.plot(xdata,ydata,zdata)
+        ax.scatter([xdata[0]], [ydata[0]], [zdata[0]], c='r', label='start', marker="^", zorder=3.5)
 
     #-------------------------
     # Plot Occupancy
     #-------------------------
-    alpha_gas = 1
-    if plot_occ:
-        alpha_gas = 0.8
-        occ_data_file = glob.glob(f"{ENVS_DIR}/{str(env_id).zfill(3)}/occupancy/*grid.npy")[0] # occ data file
-        z_idx = math.ceil((height)/0.2)
-        occmap = np.transpose(np.load(occ_data_file)[z_idx])[2:-1,2:-1]
-        plt.imshow(occmap, vmin=0, vmax=1, origin='lower', interpolation='none', cmap='binary', extent=(0.,15.,0.,15.), alpha=1)
-        plt.draw()
+    # alpha_gas = 1
+    # if plot_occ:
+    #     alpha_gas = 0.8
+    #     occ_data_file = glob.glob(f"{ENVS_DIR}/{str(env_id).zfill(3)}/occupancy/*grid.npy")[0] # occ data file
+    #     z_idx = math.ceil((height)/0.2)
+    #     occmap = np.transpose(np.load(occ_data_file)[z_idx])[2:-1,2:-1]
+    #     plt.imshow(occmap, vmin=0, vmax=1, origin='lower', interpolation='none', cmap='binary', extent=(0.,15.,0.,15.), alpha=1)
+    #     plt.draw()
 
     #-------------------------
     # Plot Gas
@@ -78,24 +79,29 @@ def plot_pos(exp_id:str,
     with np.load(f'{PLOT_DIR}/ppm_data/ppm_env_{str(env).zfill(3)}.npz') as data:
         ppm = data['arr_0']
 
-    im = ax.imshow(np.flip(np.transpose(ppm[:,:,(int(4*height) - 1)]),axis=0), cmap='gray_r', extent=(0.,15.,0.,15.), alpha=alpha_gas)
+    # ppm = ppm[:-1,:-1,:-1]
+    # im = ax.imshow(np.flip(np.transpose(ppm[:,:,(int(4*height) - 1)]),axis=0), cmap='gray_r', extent=(0.,15.,0.,15.), alpha=alpha_gas)
+    
+    # x,y,z = np.indices((61,61,33))/4
+    # fcolors = np.where(ppm,'#FFD65DC0', '#7A88CCC0')
+    # ax.voxels(x, y, z, ppm, facecolors=fcolors)
     # Create colorbar
-    cbar = ax.figure.colorbar(im, ax=ax)
-    cbar.ax.set_ylabel("ppm", rotation=-90, va="bottom")
+    # cbar = ax.figure.colorbar(im, ax=ax)
+    # cbar.ax.set_ylabel("ppm", rotation=-90, va="bottom")
 
     # plot source
     if (env%2) == 0:
-        plt.scatter([1.], [10.], c='g', label='source', zorder=3.5)
+        ax.scatter([1.], [10.], [2.], c='g', label='source', zorder=3.5)
     else:
-        plt.scatter([5.], [1.], c='g', label='source', zorder=3.5)
+        ax.scatter([5.], [1.], [2.], c='g', label='source', zorder=3.5)
 
     # plot inlet outlet annotaions
-    ax.annotate('', xy=(2.2, 1.3), xytext=(0.2, 1.3), color='black',
-                arrowprops=dict(facecolor='black', shrink=0.05))
-    ax.annotate('', xy=(14.8, 12.7), xytext=(12.8, 12.7), color='black',
-                arrowprops=dict(facecolor='black', shrink=0.05))
-    ax.annotate('inlet', xy=(0.5, 2))
-    ax.annotate('outlet', xy=(12.8, 13.5))
+    # ax.annotate('', xy=(2.2, 1.3), xytext=(0.2, 1.3), color='black',
+    #             arrowprops=dict(facecolor='black', shrink=0.05))
+    # ax.annotate('', xy=(14.8, 12.7), xytext=(12.8, 12.7), color='black',
+    #             arrowprops=dict(facecolor='black', shrink=0.05))
+    # ax.annotate('inlet', xy=(0.5, 2))
+    # ax.annotate('outlet', xy=(12.8, 13.5))
 
     #plt.title(f'Dung Beetle Algorithm - Experiment {exp_id}')
     plt.title(f'Sniffybug Algorithm - Ground Track')
@@ -109,11 +115,11 @@ def plot_pos(exp_id:str,
     by_label = dict(zip(labels, handles))
 
     if (env%2) == 0:
-        plt.legend(by_label.values(), by_label.keys(), loc='lower right')
+        ax.legend(by_label.values(), by_label.keys(), loc='lower right')
     else:
-        plt.legend(by_label.values(), by_label.keys(), loc='upper left')
+        ax.legend(by_label.values(), by_label.keys(), loc='upper left')
     
-    fig.tight_layout()
+    # fig.tight_layout()
 
     if save:
         plt.savefig(str(save_fname), format=filetype, bbox_inches='tight')

@@ -45,3 +45,5 @@ log/
 # Results
 /examples/results/*
 /examples/utils/plot/figures/*
+# Saved benchmark lists
+*.txt 

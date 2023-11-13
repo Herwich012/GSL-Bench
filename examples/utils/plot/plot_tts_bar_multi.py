@@ -10,10 +10,10 @@ import glob
 from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['figure.dpi'] = 300
+# plt.rcParams['figure.dpi'] = 300
 plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
-plt.rcParams["font.family"] = "Times New Roman"
+# plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
 RESULTS_DIR = f"{PEGASUS_DIR}/examples/results"
@@ -22,22 +22,22 @@ PLOT_DIR = f"{PEGASUS_DIR}/examples/utils/plot/figures"
 ### Save params ###
 save_plot = False
 filetype = 'pdf'
-save_fname = f"{PLOT_DIR}/avg_tts.{filetype}"
+save_fname = f"{PLOT_DIR}/avg_tts_add.{filetype}"
 
 ### Data selection ###
-algorithms = ("E. Coli", "Dung Beetle", "Random Walker")
+algorithms = ("E. Coli", "Dung Beetle", "Random Walker", "3D E. Coli")
 environments = ("1", "2", "3", "4", "5", "6")
-exp_id_starts = [[ 10,  19,  28], # env 001
-                 [ 46,  55,  37], # env 002
-                 [ 82, 100,  91], # ...
-                 [109, 127, 118],
-                 [136, 154, 145],
-                 [199, 181, 172]]
-amount = 9
+exp_id_starts = [[ 10,  19,  28, 208], # env 001
+                 [ 46,  55,  37, 217], # env 002
+                 [ 82, 100,  91, 226], # ...
+                 [109, 127, 118, 235],
+                 [136, 154, 145, 244],
+                 [199, 181, 172, 253]]
+loc_amount = 9 # amount of locations per environment
 
 
 def get_times2source(start:int) -> list:
-    experiments = [str(i + start).zfill(3) for i in range(amount)]
+    experiments = [str(i + start).zfill(3) for i in range(loc_amount)]
     times2source = []
 
     for _,exp_id in enumerate(experiments):
@@ -78,13 +78,13 @@ print(ttss_dict)
 # Plot Bargraph
 #-------------------------
 fig, ax = plt.subplots()
-fig.set_figheight(4)
-fig.set_figwidth(5)
+fig.set_figheight(5)
+fig.set_figwidth(7)
 
 x = np.arange(len(environments))  # the label locations
-width = 0.25  # the width of the bars
-multiplier = 0
-hatching = ('..','///','O')
+width = 0.2  # the width of the bars
+multiplier = -0.5
+hatching = ('..','///','O', '/')
 
 for (attribute,measurement),hatchtype in zip(ttss_dict.items(),hatching):
     offset = width * multiplier
@@ -99,11 +99,11 @@ ax.set_ylabel('Average time to source (s)')
 ax.set_xlabel('Environment')
 ax.set_title('Average Times To Source Per Environment')
 ax.set_xticks(x + width, environments)
-ax.legend(loc='upper center', ncols=3)
+ax.legend(loc='upper center', ncols=len(algorithms))
 #ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
 #ax.legend(loc='upper right')
 #ax.set_ylim(0, 185)
-ax.set_ylim(0,205)
+ax.set_ylim(0,225)
 fig.tight_layout()
 
 if save_plot:
