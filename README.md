@@ -13,16 +13,46 @@ GSL-Bench extends the Pegasus Simulator framework by introducing GSL environment
 
 ## Installation
 ℹ️ GSL-Bench has only been verified to work with `Ubuntu 20.04 LTS` and `Isaac Sim 2022.2.0`
-1) Clone this fork of the Pegasus Simulator repository and `checkout` the `gsl-benchmarking` branch.
-2) Follow the installation instructions of the pegasus simulator framework provided by their documentation [here](https://pegasussimulator.github.io/PegasusSimulator/).
 
+Follow the installation instructions of the pegasus simulator framework provided by their documentation [here](https://pegasussimulator.github.io/PegasusSimulator/source/setup/installation.html). 
+
+⚠️ Note, instead of cloning the original PegasusSimulator repository as described by their documentation, clone this fork and checkout the `gsl-benchmarking` branch as such: 
+
+#### Option 1: With HTTPS
+```
+git clone https://github.com/Herwich012/PegasusSimulator.git
+git checkout gsl-benchmarking 
+```
+#### Option 2: With SSH (you need to setup a github account with ssh keys)
+```
+git clone git@github.com:Herwich012/PegasusSimulator.git
+git checkout gsl-benchmarking 
+```
 
 ## Usage
 
-### Creating a GSL algorithm
-To create an GSL algorithm, create a new Python module with the algorithm class that inherits the `GSL` class from `gsl.py`. 
-
 ### Running the simulation
+GSL-Bench uses Isaac Sim's Python API in [standalone mode](https://docs.omniverse.nvidia.com/isaacsim/latest/index.html). To run GSL-Bench, open a terminal, `cd` into the `PegasusSimulator` directory and start Isaac Sim with a python script of choice given in the `examples` directory:
+
+```
+cd PegasusSimulator
+ISAACSIM_PYTHON examples/10_python_single_vehicle_gsl.py
+```
+
+This python script specifies the following parameters of the simulation:
+- Selected GSL algorithm
+- Selected environment
+- Starting postition
+- Experiment ID
+- Amount of repeated runs
+- Logging of statistics
+- Sensor settings
+- Multitoror controller settings
+- Stop condition(s)
+
+### Creating a GSL algorithm
+To create an GSL algorithm, create a new Python module with the algorithm class that inherits the `GSL` class from `gsl.py`.
+
 
 ### Performing a benchmark
 
