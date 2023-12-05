@@ -44,20 +44,71 @@ This python script specifies the following parameters of the simulation:
 - Selected environment
 - Starting postition
 - Experiment ID
-- Amount of repeated runs
+- Amount of runs before closing the simulation
 - Logging of statistics
 - Sensor settings
 - Multitoror controller settings
 - Stop condition(s)
 
 ### Creating a GSL algorithm
-To create an GSL algorithm, create a new Python module with the algorithm class that inherits the `GSL` class from `gsl.py`.
+To create a new GSL algorithm, create a new Python file in:
+`extensions/pegasus.simulator/pegasus/simulator/logic/gsl/`
 
+It should contain your GSL algorithm class that inherits the `GSL` class from `gsl.py`. Add the appropriate import statement in the `__init__.py` contained in the same folder. Your GSL algorithm requires at least `get_wp()` function should return a 3x3 numpy array with the desired XYZ location, velocity and acceleration at the destination waypoint:
+
+```
+[[px, py, pz],
+ [vx, vy, vz],
+ [ax, ay, zx]]
+```
+It is also advised to include a `reset()` function which is called when the simulation resets in between runs. Please see the included algorithms, they can serve as an example. 
+
+The GSL algorithm is used in a `nonlinear_controller` Python file which are situated in:
+`examples/utils/`. There, the GSL algorithm is initialized and the `get_wp()` function is called when required.
 
 ### Performing a benchmark
+To automatically perform multiple simulations with different algorithms accross multiple environments, a python script `benchmark.py` is provided in the root of the repository. By providing the Benchmark class with a dictionary of the required parameters and executing it through the terminal:
+
+```
+cd PegasusSimulator
+python3 benchmark.py
+```
+
+It will do the following
+1) It creates a list of experiments to be carried out: it runs every script(algorithm) in every environment from every position.
+2) Each experiment is given an ID (by default, starting from the first available ID based on the results already present in `examples/results/`, or starting from a specified `start_id`). And a promt is shown to confirm the list of experiments:
+
+```
+Benchmarking: Ecoli3D
+The following experiments are in queue:
+ exp_id                      script                         env_id   start_pos
+--------------------------------------------------------------------------------
+['262', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [3.0, 3.0, 0.2]]
+['263', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [7.5, 3.0, 0.2]]
+['264', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [12.0, 3.0, 0.2]]
+['265', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [3.0, 7.5, 0.2]]
+['266', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [7.5, 7.5, 0.2]]
+['267', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [12.0, 7.5, 0.2]]
+['268', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [3.0, 12.0, 0.2]]
+['269', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [7.5, 12.0, 0.2]]
+['270', 'examples/12_python_single_vehicle_gsl_benchmark.py', 1, [12.0, 12.0, 0.2]]
+['271', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [3.0, 3.0, 0.2]]
+['272', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [7.5, 3.0, 0.2]]
+['273', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [12.0, 3.0, 0.2]]
+['274', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [3.0, 7.5, 0.2]]
+['275', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [7.5, 7.5, 0.2]]
+['276', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [12.0, 7.5, 0.2]]
+['277', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [3.0, 12.0, 0.2]]
+['278', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [7.5, 12.0, 0.2]]
+['279', 'examples/12_python_single_vehicle_gsl_benchmark.py', 2, [12.0, 12.0, 0.2]]
+Continue? (y/n):
+```
+
+3) After continuing by entering `y`, it sequentially performs every experiment.
+4) A `.txt` file with the list of experiments is saved in the root folder.
 
 ### Plotting the results
-
+To plot the logged statistics, there are scripts available in `examples/utils/plot/`. Specify the desired experiment ID(s) for plotting and run the script. The plots are saved in `examples/utils/plot/figures` by default.
 
 ## Citations
 

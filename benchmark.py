@@ -53,11 +53,11 @@ class Benchmark:
         benchmark_list = []
         exp_id = self.exp_start_id
         
-        for _,script in enumerate(self.scripts):
-            for _,env in enumerate(self.envs):
-                for _,pos_idx in enumerate(self.pos_select):
+        for _,script in enumerate(self.scripts): # for every script (algorithm)...
+            for _,env in enumerate(self.envs):   # for every environment...
+                for _,pos_idx in enumerate(self.pos_select): # for every position...
                     benchmark_list.append([str(exp_id).zfill(3), script, env, self.pos_list[pos_idx]])
-                    exp_id += 1
+                    exp_id += 1 # list an experiment
 
         return benchmark_list
 
