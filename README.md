@@ -8,7 +8,7 @@
 Omniverse](https://docs.omniverse.nvidia.com/) and [Isaac
 Sim](https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/overview.html). It is designed to provide an easy yet powerful way to simulate and evaluate gas source localization tasks. 
 
-GSL-Bench extends the Pegasus Simulator framework by introducing GSL environments and sensors. Included are six GSL environments, more environments may be created with [AutoGDM+](https://github.com/tudelft/autoGDMplus). Also included are modules that automatically test the performance of algorithms and plot metrics. At the moment, only multirotor vehicles are supported, with support for other vehicle topologies planned for future versions. Check out [this video](https://youtu.be/kZa48WXf_1w?si=rkANmCbrxB9xOoii) to get an impression of GSL-Bench.
+GSL-Bench extends the Pegasus Simulator framework by introducing GSL environments and sensors. Included are six GSL environments, more environments may be created with [AutoGDM+](https://github.com/tudelft/autoGDMplus). Also included are modules that automatically test the performance of algorithms and plot metrics. At the moment, only multirotor vehicles are supported, with support for other vehicle topologies planned for future versions. Check out [this video](https://youtu.be/kZa48WXf_1w?si=rkANmCbrxB9xOoii) or [our website](https://sites.google.com/view/gslbench/) to get an impression of GSL-Bench.
 
 
 ## Installation
@@ -112,7 +112,7 @@ To plot the logged statistics, there are scripts available in `examples/utils/pl
 
 ## Citations
 
-If you find GSL-Bench useful in your academic work, please cite the paper below. It is also available [here]().
+If you find GSL-Bench useful in your academic work, please cite the paper below. It is also available [here](https://github.com/Herwich012/PegasusSimulator/tree/gsl-benchmarking).
 
 ```
 @misc{
@@ -132,6 +132,7 @@ If you find Pegasus Simulator useful in your academic work, please cite the pape
 ```
 
 ## Support and Contributing
+`<coming soon>`
 
 ## Licenses
 Pegasus Simulator is released under [BSD-3 License](LICENSE). The license files of its dependencies and assets are present in the [`docs/licenses`](docs/licenses) directory.
