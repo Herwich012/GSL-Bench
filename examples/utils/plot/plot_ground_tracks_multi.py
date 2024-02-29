@@ -15,17 +15,17 @@ plt.rcParams['ps.fonttype'] = 42
 # plt.rcParams["font.family"] = "Times New Roman"
 HOME_DIR = Path.home()
 PEGASUS_DIR = f"{HOME_DIR}/Omniverse_extensions/PegasusSimulator"
-RESULTS_DIR = f"{PEGASUS_DIR}/examples/results/pso/000"
+RESULTS_DIR = f"{PEGASUS_DIR}/examples/results/pso/env_3"
 ENVS_DIR =    f"{PEGASUS_DIR}/examples/environments"
 PLOT_DIR =    f"{PEGASUS_DIR}/examples/utils/plot"
 
 ### Save Params ###
-exp_id = 5
+exp_id = 9
 save_plot = True
 filetype = 'pdf'
-env_id = 1
+env_id = 3
 
-multiple = False  # create multiple plots from multiple experiments
+multiple = False # create multiple plots from multiple experiments
 exp_amount = 9 # amount of experiments
 
 def plot_pos(exp_id:str,
@@ -36,7 +36,7 @@ def plot_pos(exp_id:str,
              filetype:str   = 'pdf'
              ) -> None :
    
-    save_fname = f"{PLOT_DIR}/figures/pos_pso_{exp_id}.{filetype}"
+    save_fname = f"{PLOT_DIR}/figures/pso_env_{env_id}/pos_pso_{exp_id}.{filetype}"
     
     files = glob.glob(f"{RESULTS_DIR}/pso_run_{exp_id}_id*")
     files_sorted = [files[i] for i in np.argsort(files)]
@@ -98,7 +98,7 @@ def plot_pos(exp_id:str,
     ax.annotate('outlet', xy=(12.8, 13.5))
 
     #plt.title(f'Dung Beetle Algorithm - Experiment {exp_id}')
-    plt.title(f'Sniffybug Algorithm - Ground Track')
+    plt.title(f'PSO Algorithm - Ground Track')
     plt.axis('scaled')
     plt.grid()
     plt.xlabel('x [m]')
@@ -122,8 +122,8 @@ def plot_pos(exp_id:str,
 
 
 def plot_multiple(start:int, env:int, amount:int=9, save:bool=False, filetype:str='pdf') -> None:
-    experiments = [str(i + start).zfill(3) for i in range(amount)]
-    
+    experiments = [str(i + start) for i in range(amount)]
+
     occ = True
     if env <= 2: occ = False
     

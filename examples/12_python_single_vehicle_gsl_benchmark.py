@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-| File: 10_python_single_vehicle_mox.py
+| File: 12_python_single_vehicle_gsl_benchmark.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
-| Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
+| Description: This files serves as an example on how to run a GSL benchmark with the benchmark.py script
 """
 import os
 import ast

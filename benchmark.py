@@ -1,3 +1,9 @@
+"""
+| File: benchmark.py
+| Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
+| License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
+| Description: This script automates the creation of benchnarks and executes examples/12_pyton...benchmark.py
+"""
 import os
 import sys
 import time

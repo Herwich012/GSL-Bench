@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-| File: 10_python_single_vehicle_mox.py
+| File: 11_python_multi_vehicle_mox.py
 | Author: Hajo Erwich (h.h.erwich@student.tudelft.nl)
 | License: BSD-3-Clause. Copyright (c) 2023, Hajo Erwich. All rights reserved.
-| Description: This files serves as an example on how to run a GSL benchmark with a single vehicle.
+| Description: This files serves as an example on how to run a GSL benchmark with multiple vehicles.
 """
 import yaml
 import glob
@@ -17,7 +17,8 @@ from omni.isaac.kit import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": True})
+HEADLESS = True
+simulation_app = SimulationApp({"headless": HEADLESS})
 
 # -----------------------------------
 # The actual script should start here
@@ -59,7 +60,7 @@ class PegasusApp:
         self.curr_dir = str(Path(os.path.dirname(os.path.realpath(__file__))).resolve()) # Get current directory
 
         # Select the environment id
-        env_id = 2
+        env_id = 3
         self.env_dir = self.curr_dir + f"/environments/{str(env_id).zfill(3)}/"
 
         # Environment specifications
@@ -241,7 +242,7 @@ class PegasusApp:
                                          pos_current = pos):
                 pos = np.append(self.gsl.swarm_pos_best,[4.0])
                 # Update the UI of the app and perform the physics step
-                self.world.step(render=False)
+                self.world.step(render=not HEADLESS)
 
             if self.stop_cond.type == "dist2src": # mark the run as a success if the source is considered found
                 self.controller0.run_success[0] = True
